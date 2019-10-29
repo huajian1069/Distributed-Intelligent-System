@@ -1,0 +1,9 @@
+1.0.7 : set default comm range to max. Added windows project files for the 2 examples. Put IRCOM_PROX_TRIGGER define in ircom.h to ease tuning of proximity checks count per seconds.
+
+__________________________________________________
+
+This version has been modified so it can compile on the lab computers for the DIS course. Source files and makefiles have been shuffled around and source file may have been modified to take into account those changes. The example called "test" has been modified to fit the project.
+
+3.11.2014
+Steven Roelofsen
+ 

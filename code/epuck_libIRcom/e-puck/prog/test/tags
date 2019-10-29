@@ -1,0 +1,6 @@
+Mmain	main.c	/^int main()$/
+getselector	main.c	/^int getselector()$/
+obstacleAvoidance	main.c	/^void obstacleAvoidance()$/
+obstacleAvoidanceSpeed	main.c	169
+obstacleAvoidanceThreshold	main.c	168
+sensorDir	main.c	37

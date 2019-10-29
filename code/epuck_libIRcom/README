@@ -1,0 +1,84 @@
+
+Software : modified libIrcom 1.0.7
+Authors : Alexandre Campo, Alvaro Gutierrez, Valentin Longchamp, Steven Roelofsen
+
+
+What is it ?
+================================================================================
+libIrcom is a library that can be used straight forward on the e-puck robots 
+(www.e-puck.org) to achieve local range infrared communication, alsa known as
+range and bearing. libIrcom relies on the infrared sensors of the robots to 
+transmit and receive information. However, the communication system is 
+multiplexed with the proximity sensing system commonly used on the robots. It is 
+therefore possible to both communicate and avoid obstacles.
+
+libIrcom allows communications at a rate of 30 bytes per seconds max from 
+sender to receiver, including a 2bits CRC check in each byte to detect erroneous
+messages. Messages are encoded using a frequency modulation that permits usage 
+in a wide range of light conditions. Messages can be detected up to 25 cm of 
+distance between emitter and receiver. If continuous listening is activated,
+libIrcom will try to catch as many messages as possible, independently of the 
+cycle duration of your controller. Messages are stored in a queue and can be 
+retrieved at any time, unless they are overwritten when the queue is full.
+
+
+
+How to test the examples ?
+================================================================================
+Go to the folder e-puck/prog/test. This example shows the comunication between 
+two robots. One will be the emitter and the other the receiver. You will choose 
+each one with the selector switch. 1-> Emiter 2-> Receiver.
+
+Compile using `make all`. Upload the generated .hex file on to two epucks. Set 
+the selector switch to emitter on one of them and receiver on the other. 
+Connect to the receiver robot and open minicom or any other terminal emulator.
+
+The emitter will start transmiting a sequence of numbers from 0 to 255 (1 byte) 
+continuously.
+
+The receiver will take the frame and demodulate it. If the frame is well decoded
+the receiver will send it to through bluetooth to the computer, along with information about the
+location of the emitter of the message (orientation and distance). 
+The orientation is expressed in the local mark of the receiver starting from 
+the camera and going CCW. The distance is between the center of the 2 robots.
+
+The data from the robots can be seen using minicom.
+
+Good luck !
+
+
+Troubleshooting
+================================================================================
+* Wrong messages received, or messages not received
+Robots emit the same infrareds. So when several robots try to send in the same 
+time, you are likely to receive only wrong messages.
+In addition, IR communications are slightly sensitive to light conditions. If 
+you want to get close to 0 messages lost, try to work with controlled light, 
+emitting few infrareds, and without oscillations.
+
+* Timers 
+libIrcom is cpu consuming because it is monitoring very regularly the sensors.
+The interrupt used is set to a high priority which may superseed others. If you
+use agendas or any other interrupt, it is likely that some steps are lost.
+To cope with this problems of timing, we have implemented a time counter inside
+libIrcom (see ircomTools.c). libIrcom is the only tool that can give you accurate 
+timings.
+
+* Messages going through a robot or blocked by a wall
+Infrared is light. Therefore a message can not be sent accross an opaque material.
+Given that e-pucks are transparent, it is possible that a message goes accross
+a robot. Do not expect that a robot is necessarily preventing messages to go 
+through, make some tests.
+
+
+More informations
+================================================================================
+Find more informations on http://www.e-puck.org, or on the GNA community 
+https://gna.org/projects/e-puck/
+
+
+Contact the authors
+================================================================================
+Steven Roelofsen : steven.roelofsen@epfl.ch
+
+
