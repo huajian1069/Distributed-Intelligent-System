@@ -40,11 +40,11 @@
 #define RULE1_WEIGHT (0.6 / 10) // Weight of aggregation rule. default 0.6/10
 
 #define RULE2_THRESHOLD 0.15	 // Threshold to activate dispersion rule. default 0.15
-#define RULE2_WEIGHT (0.01 / 10) // Weight of dispersion rule. default 0.02/10
+#define RULE2_WEIGHT (0.02 / 10) // Weight of dispersion rule. default 0.02/10
 
-#define RULE3_WEIGHT (0.0 / 10) // Weight of consistency rule. default 1.0/10
+#define RULE3_WEIGHT (1.0 / 10) // Weight of consistency rule. default 1.0/10
 
-#define MIGRATION_WEIGHT (0.01 / 10) // Wheight of attraction towards the common goal. default 0.01/10
+#define MIGRATION_WEIGHT (0.9 / 10) // Wheight of attraction towards the common goal. default 0.01/10
 
 #define MIGRATORY_URGE 1 // Tells the robots if they should just go forward or move towards a specific migratory direction
 
@@ -313,7 +313,7 @@ void process_received_ping_messages(void)
 		theta = theta + my_position[2]; // find the relative theta;
 		range = sqrt((1 / message_rssi));
 
-		other_robot_id = (int)(inbuffer[5] - '0'); // since the name of the sender is in the received message. Note: this does not work for robots having id bigger than 9!
+		other_robot_id = (int)(inbuffer[5] - '0') % FLOCK_SIZE; // since the name of the sender is in the received message. Note: this does not work for robots having id bigger than 9!
 
 		// Get position update
 		//theta += dtheta_g[other_robot_id];
