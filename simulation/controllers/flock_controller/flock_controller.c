@@ -35,7 +35,7 @@ int robot_id;	// Unique and normalized (between 0 and FLOCK_SIZE-1) robot ID
 char* robot_name;
 int e_puck_matrix[16] = {17,29,34,10,8,-38,-56,-76,-72,-58,-36,8,10,36,28,18}; // for obstacle avoidance
 int initialized[FLOCK_SIZE];		// != 0 if initial positions have been received
-float migr[2] = {25,-25};	        // Migration vector
+float migr[2] = {50, 50};	        // Migration vector
 float my_position[3];
 
 
@@ -43,9 +43,10 @@ static void reset()
 {
 	wb_robot_init();
 
-
+	//get receiver and emitter
 	receiver2 = wb_robot_get_device("receiver");
 	emitter2 = wb_robot_get_device("emitter");
+	wb_receiver_enable(receiver2,64);
 
 	//get motors
 	left_motor = wb_robot_get_device("left wheel motor");
@@ -53,34 +54,30 @@ static void reset()
     wb_motor_set_position(left_motor, INFINITY);
     wb_motor_set_position(right_motor, INFINITY);
 	
-	
+	//get infra-red distance sensor
 	int i;
 	char s[4]="ps0";
 	for(i=0; i<NB_SENSORS;i++) {
 		ds[i]=wb_robot_get_device(s);	// the device name is specified in the world file
 		s[2]++;				// increases the device number
 	}
-	robot_name=(char*) wb_robot_get_name(); 
-
 	for(i=0;i<NB_SENSORS;i++)
           wb_distance_sensor_enable(ds[i],64);
 
-	wb_receiver_enable(receiver2,64);
-
+	//get robot name and id
+	robot_name=(char*) wb_robot_get_name(); 
 	//Reading the robot's name. Pay attention to name specification when adding robots to the simulation!
 	sscanf(robot_name,"epuck%d",&robot_id); // read robot id from the robot's name
 	robot_id = robot_id%FLOCK_SIZE;	  // normalize between 0 and FLOCK_SIZE-1
-  
+
 	for(i=0; i<FLOCK_SIZE; i++) 
-	{
 		initialized[i] = 0;		  // Set initialization to 0 (= not yet initialized)
-	}
-  
-    printf("Reset: robot %d\n",robot_id);
         
-    migr[0] = 25;
-    migr[1] = 25;
+    //set abosute coordinates of robots' starting position in scenaro one: 
+    //initial x and z coordinate
     my_position[0] = -2.9;
+    my_position[2] = -1.57;
+    //initial theta angle
     switch (robot_id){
     	case 0:
     		my_position[1] = 0;
@@ -92,13 +89,14 @@ static void reset()
     		my_position[1] = -0.1;
     		break;
     	case 3:
-    		my_position[1] = 0.21;
+    		my_position[1] = 0.21; // very close to 0.2, ideal: 0.2
     		break;
     	case 4:
     		my_position[1] = -0.2;
     		break;
     }
-    my_position[2] = -1.57;
+
+    printf("Reset: robot %d\n",robot_id);
 }
 
 void update_self_motion(int msl, int msr) { 
@@ -119,7 +117,7 @@ void update_self_motion(int msl, int msr) {
 	my_position[1] += dz;
 	my_position[2] += dtheta;
   
-	// Keep orientation within 0, 2pi
+	// Keep orientation within -pi, pi
 	if (my_position[2] > M_PI) my_position[2] -= 2.0*M_PI;
 	if (my_position[2] < -M_PI) my_position[2] += 2.0*M_PI;
 	printf("epcuk %d: x=%f, z=%f, theta=%f\n", robot_id, my_position[0], my_position[1], my_position[2]);
@@ -136,66 +134,79 @@ void limit(int *number, int limit) {
 		*number = -limit;
 }
 
+void Braitenberg(int *bmsl, int *bmsr, int *sum_sensors, int *max_sens){
+
+	int distances[NB_SENSORS];	// Array for the distance sensor readings
+	for(int i=0;i<NB_SENSORS;i++) 
+	{
+		distances[i]=wb_distance_sensor_get_value(ds[i]); //Read sensor values
+        *sum_sensors += distances[i]; // Add up sensor values
+        *max_sens = *max_sens>distances[i]?*max_sens:distances[i]; // Check if new highest sensor value
+        if(robot_id==2) printf("distances[%d]=%d\t", i, distances[i]);
+        // Weighted sum of distance sensor values for Braitenburg vehicle
+        *bmsr += e_puck_matrix[i] * distances[i];
+        *bmsl += e_puck_matrix[i+NB_SENSORS] * distances[i];
+    }
+    if(robot_id==2) printf("\n");
+	// Adapt Braitenberg values (empirical tests)
+    *bmsl/=MIN_SENS; *bmsr/=MIN_SENS;
+}
+
+float Reynolds(int *msl, int *msr, int max_sens){
+
+    float weight_rey;			// weight of reynolds rule in combined speed
+	//impose migrate urge
+	*msl = 10 * migr[0] + 100*(my_position[2] + 1.57)*MIN_SENS/max_sens;
+	*msr = 10 * migr[1] - 100*(my_position[2] + 1.57)*MIN_SENS/max_sens;
+	
+	// Adapt speed instinct to distance sensor values
+	//if (max_sens > MAX_SENS*0.7) {
+	weight_rey = 1 - max_sens/(2*MAX_SENS);
+	*msl *= weight_rey;
+	*msr *= weight_rey;
+	//}
+	return weight_rey;
+}
+
+void epuck_move(int msl, int msr){
+	msl = msl*MAX_SPEED_WEB/1000;
+	msr = msr*MAX_SPEED_WEB/1000;
+	wb_motor_set_velocity(left_motor, msl);
+    wb_motor_set_velocity(right_motor, msr);
+}
+
 // the main function
 int main(){ 
     int msl, msr;			// Wheel speeds
-    float msl_w, msr_w;
     int bmsl=0, bmsr=0;
-    int distances[NB_SENSORS];	// Array for the distance sensor readings
-    int sum_sensors, max_sens;
-    float weight_rey;		// Store highest sensor value   
-    int i;
- 	reset();			// Resetting the robot
+    int sum_sensors, max_sens;  // Store highest sensor value   
 
+ 	reset();			// Resetting the robot
 	// Forever
 	for(;;){
 
         sum_sensors = 0;
 		max_sens = 0;
-                
-		/* Braitenberg */
-		for(i=0;i<NB_SENSORS;i++) 
-		{
-			distances[i]=wb_distance_sensor_get_value(ds[i]); //Read sensor values
-            sum_sensors += distances[i]; // Add up sensor values
-            max_sens = max_sens>distances[i]?max_sens:distances[i]; // Check if new highest sensor value
 
-            // Weighted sum of distance sensor values for Braitenburg vehicle
-            bmsr += e_puck_matrix[i] * distances[i];
-            bmsl += e_puck_matrix[i+NB_SENSORS] * distances[i];
-        }
-
-		// Adapt Braitenberg values (empirical tests)
-        bmsl/=MIN_SENS; bmsr/=MIN_SENS;
-        //bmsl+=66; bmsr+=66;//72;
+        Braitenberg(&bmsl, &bmsr, &sum_sensors, &max_sens);       
         printf("epuck%d: bmsl= %d, bmsr= %d\n", robot_id, bmsl, bmsr);
 
+        float weight_rey = Reynolds(&msl, &msr, max_sens);
+		printf("epuck%d:  weight_rey= %f, msl= %d, msr= %d\n", robot_id, weight_rey, msl, msr);
 
-		//msl = 10*(pow(,2) + pow(,2));
-		//msr = 10*(;
-		msl = 10 * migr[0] + 100*(my_position[2] + 1.57)*MIN_SENS/max_sens;
-		msr = 10 * migr[1] - 100*(my_position[2] + 1.57)*MIN_SENS/max_sens;
-		printf("epuck%d: msl= %d, msr= %d\n", robot_id, msl, msr);
-				// Adapt speed instinct to distance sensor values
-		//if (sum_sensors > NB_SENSORS*MIN_SENS) {
-		weight_rey = 1 - max_sens/(2*MAX_SENS);
-		msl *= weight_rey;
-		msr *= weight_rey;
-		//}
-				// Set speed
+		// combine speed of migrate and Braitenbergs, impose speed upper bound
 		msl += bmsl;
 		msr += bmsr;
-		        
-		printf("epuck%d:  weight_rey= %f, msl= %d, msr= %d\n", robot_id, weight_rey, msl, msr);
       	limit(&msl,1000);
       	limit(&msr,1000);
+      	printf("epuck%d: msl= %d, msr= %d\n", robot_id, msl, msr);
+
+      	// implement odometry 
       	update_self_motion(msl, msr);
-		
-		msl_w = msl*MAX_SPEED_WEB/1000;
-		msr_w = msr*MAX_SPEED_WEB/1000;
-		wb_motor_set_velocity(left_motor, msl_w);
-              wb_motor_set_velocity(right_motor, msr_w);
-	
+
+		// actually activate motors
+		epuck_move(msl, msr);
+
 		// Continue one step
 		wb_robot_step(TIME_STEP);
 	}
