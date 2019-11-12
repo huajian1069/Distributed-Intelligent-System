@@ -13,9 +13,7 @@
 #include <string.h>
 
 #include <webots/robot.h>
-/*Webots 2018b*/
 #include <webots/motor.h>
-/*Webots 2018b*/
 #include <webots/differential_wheels.h>
 #include <webots/distance_sensor.h>
 #include <webots/emitter.h>
@@ -36,10 +34,10 @@
 #define WHEEL_RADIUS 0.0205		// Wheel radius (meters)
 #define DELTA_T 0.064			// Timestep (seconds)
 
-#define RULE1_THRESHOLD 0.20	// Threshold to activate aggregation rule. default 0.20
-#define RULE1_WEIGHT (0.6 / 10) // Weight of aggregation rule. default 0.6/10
+#define RULE1_THRESHOLD 0.20   // Threshold to activate aggregation rule. default 0.20
+#define RULE1_WEIGHT (10 / 10) // Weight of aggregation rule. default 0.6/10
 
-#define RULE2_THRESHOLD 0.15	 // Threshold to activate dispersion rule. default 0.15
+#define RULE2_THRESHOLD 0.10	 // Threshold to activate dispersion rule. default 0.15
 #define RULE2_WEIGHT (0.02 / 10) // Weight of dispersion rule. default 0.02/10
 
 #define RULE3_WEIGHT (1.0 / 10) // Weight of consistency rule. default 1.0/10
@@ -65,16 +63,16 @@ int robot_id_u, robot_id; // Unique and normalized (between 0 and FLOCK_SIZE-1) 
 
 float relative_pos[FLOCK_SIZE][3];		// relative X, Z, Theta of all robots
 float prev_relative_pos[FLOCK_SIZE][3]; // Previous relative  X, Z, Theta values
-float my_position[3];					// X, Z, Theta of the current robot
-float prev_my_position[3];				// X, Z, Theta of the current robot in the previous time step
-float speed[FLOCK_SIZE][2];				// Speeds calculated with Reynold's rules
-float relative_speed[FLOCK_SIZE][2];	// Speeds calculated with Reynold's rules
-int initialized[FLOCK_SIZE];			// != 0 if initial positions have been received
-float migr[2] = {0, -2};				// Migration vector
+float absolute_pos[FLOCK_SIZE][2];
+float my_position[3];				 // X, Z, Theta of the current robot
+float prev_my_position[3];			 // X, Z, Theta of the current robot in the previous time step
+float speed[FLOCK_SIZE][2];			 // Speeds calculated with Reynold's rules
+float relative_speed[FLOCK_SIZE][2]; // Speeds calculated with Reynold's rules
+int initialized[FLOCK_SIZE];		 // != 0 if initial positions have been received
+float migr[2] = {0, -2};			 // Migration vector
 char *robot_name;
 
 float theta_robots[FLOCK_SIZE];
-
 /*
  * Reset the robot's devices and get its ID
  */
@@ -199,6 +197,7 @@ void reynolds_rules()
 	int i, j, k;					 // Loop counters
 	float rel_avg_loc[2] = {0, 0};   // Flock average positions
 	float rel_avg_speed[2] = {0, 0}; // Flock average speeds
+	float abs_avg_loc[2] = {0, 0};
 	float cohesion[2] = {0, 0};
 	float dispersion[2] = {0, 0};
 	float consistency[2] = {0, 0};
@@ -213,11 +212,13 @@ void reynolds_rules()
 			rel_avg_speed[j] += relative_speed[i][j];
 			rel_avg_loc[j] += relative_pos[i][j];
 		}
+		abs_avg_loc[j] += absolute_pos[i][j];
 	}
 	for (j = 0; j < 2; j++)
 	{
 		rel_avg_speed[j] /= FLOCK_SIZE - 1;
 		rel_avg_loc[j] /= FLOCK_SIZE - 1;
+		abs_avg_loc[j] /= FLOCK_SIZE - 1;
 	}
 
 	/* Rule 1 - Aggregation/Cohesion: move towards the center of mass */
@@ -237,7 +238,7 @@ void reynolds_rules()
 			{
 				for (j = 0; j < 2; j++)
 				{
-					dispersion[j] -= 1 / relative_pos[k][j]; // Relative distance to k
+					// dispersion[j] -= 1 / relative_pos[k][j]; // Relative distance to k
 				}
 			}
 		}
@@ -266,8 +267,8 @@ void reynolds_rules()
 	}
 	else
 	{
-		speed[robot_id][0] += MIGRATION_WEIGHT * (migr[0] - my_position[0]);
-		speed[robot_id][1] -= MIGRATION_WEIGHT * (migr[1] - my_position[1]); //y axis of webots is inverted
+		speed[robot_id][0] += MIGRATION_WEIGHT * (migr[0] - abs_avg_loc[0]);
+		speed[robot_id][1] -= MIGRATION_WEIGHT * (migr[1] - abs_avg_loc[1]); //y axis of webots is inverted
 	}
 
 	printf("Migration goal: %f %f\n", migr[0], migr[1]);
@@ -284,8 +285,9 @@ void reynolds_rules()
 */
 void send_ping(void)
 {
-	char out[10];
-	strcpy(out, robot_name); // in the ping message we send the name of the robot.
+	char out[20];
+	sprintf(out, "%d,%.3f,%.3f", robot_name[5] - '0', my_position[0], my_position[1]);
+
 	wb_emitter_send(emitter2, out, strlen(out) + 1);
 }
 
@@ -301,6 +303,7 @@ void process_received_ping_messages(void)
 	double range;
 	char *inbuffer; // Buffer for the receiver node
 	int other_robot_id;
+	float other_x, other_y;
 	while (wb_receiver_get_queue_length(receiver2) > 0)
 	{
 		inbuffer = (char *)wb_receiver_get_data(receiver2);
@@ -313,7 +316,11 @@ void process_received_ping_messages(void)
 		theta = theta + my_position[2]; // find the relative theta;
 		range = sqrt((1 / message_rssi));
 
-		other_robot_id = (int)(inbuffer[5] - '0') % FLOCK_SIZE; // since the name of the sender is in the received message. Note: this does not work for robots having id bigger than 9!
+		sscanf(inbuffer, "%d,%f,%f", &other_robot_id, &other_x, &other_y);
+		other_robot_id = other_robot_id % FLOCK_SIZE;
+		absolute_pos[other_robot_id][0] = other_x;
+		absolute_pos[other_robot_id][1] = other_y;
+		printf("Other position: %f %f\n", other_x, other_y);
 
 		// Get position update
 		//theta += dtheta_g[other_robot_id];
@@ -375,8 +382,8 @@ int main()
 		// Adapt Braitenberg values (empirical tests)
 		bmsl /= MIN_SENS;
 		bmsr /= MIN_SENS;
-		bmsl += 66;
-		bmsr += 72;
+		// bmsl = (bmsl * bmsl) / 100;
+		// bmsr = (bmsl * bmsr) / 100;
 
 		/* Send and get information */
 		send_ping(); // sending a ping to other robot, so they can measure their distance to this robot
@@ -406,8 +413,8 @@ int main()
 		}
 
 		// Add Braitenberg
-		msl += bmsl;
-		msr += bmsr;
+		msl += bmsl * 10;
+		msr += bmsr * 10;
 
 		/*Webots 2018b*/
 		// Set speed
