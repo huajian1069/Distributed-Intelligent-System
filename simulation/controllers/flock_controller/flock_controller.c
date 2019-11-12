@@ -20,8 +20,11 @@
 #define MAX_SENS          4096    // Maximum sensibility value
 #define AXLE_LENGTH 		0.052	// Distance between wheels of robot (meters)
 #define SPEED_UNIT_RADS		0.00628	// Conversion factor from speed unit to radian per second
-#define WHEEL_RADIUS		0.0205	// Wheel radius (meters)
+#define WHEEL_RADIUS		0.0205*0.66	// Wheel radius (meters)
 #define DELTA_T			0.064	// Timestep (seconds)
+#define MIGRATION_WEIGHT 1
+#define Brai_weight 1
+#define TARGET 3
 
 WbDeviceTag left_motor; //handler for left wheel of the robot
 WbDeviceTag right_motor; //handler for the right wheel of the robot
@@ -76,51 +79,27 @@ static void reset()
     //set abosute coordinates of robots' starting position in scenaro one: 
     //initial x and z coordinate
     my_position[0] = -2.9;
-    my_position[2] = -1.57;
+    my_position[2] = 0;
     //initial theta angle
     switch (robot_id){
     	case 0:
     		my_position[1] = 0;
     		break;
     	case 1:
-    		my_position[1] = 0.1;
-    		break;
-    	case 2:
     		my_position[1] = -0.1;
     		break;
+    	case 2:
+    		my_position[1] = 0.1;
+    		break;
     	case 3:
-    		my_position[1] = 0.21; // very close to 0.2, ideal: 0.2
+    		my_position[1] = -0.21; // very close to 0.2, ideal: 0.2
     		break;
     	case 4:
-    		my_position[1] = -0.2;
+    		my_position[1] = 0.2;
     		break;
     }
 
     printf("Reset: robot %d\n",robot_id);
-}
-
-void update_self_motion(int msl, int msr) { 
-	float theta = my_position[2];
-  
-	// Compute deltas of the robot
-	float dr = (float)msr * SPEED_UNIT_RADS * WHEEL_RADIUS * DELTA_T;
-	float dl = (float)msl * SPEED_UNIT_RADS * WHEEL_RADIUS * DELTA_T;
-	float du = (dr + dl)/2.0;
-	float dtheta = (dr - dl)/AXLE_LENGTH;
-  
-	// Compute deltas in the environment
-	float dx = -du * sinf(theta);
-	float dz = -du * cosf(theta);
-  
-	// Update position
-	my_position[0] += dx;
-	my_position[1] += dz;
-	my_position[2] += dtheta;
-  
-	// Keep orientation within -pi, pi
-	if (my_position[2] > M_PI) my_position[2] -= 2.0*M_PI;
-	if (my_position[2] < -M_PI) my_position[2] += 2.0*M_PI;
-	printf("epcuk %d: x=%f, z=%f, theta=%f\n", robot_id, my_position[0], my_position[1], my_position[2]);
 }
 
 
@@ -136,6 +115,7 @@ void limit(int *number, int limit) {
 
 void Braitenberg(int *bmsl, int *bmsr, int *sum_sensors, int *max_sens){
 
+	*bmsl = 0; *bmsr = 0; *sum_sensors=0; *max_sens=0;
 	int distances[NB_SENSORS];	// Array for the distance sensor readings
 	for(int i=0;i<NB_SENSORS;i++) 
 	{
@@ -149,50 +129,101 @@ void Braitenberg(int *bmsl, int *bmsr, int *sum_sensors, int *max_sens){
     }
     if(robot_id==2) printf("\n");
 	// Adapt Braitenberg values (empirical tests)
-    *bmsl/=MIN_SENS; *bmsr/=MIN_SENS;
+    *bmsl = *bmsl / MIN_SENS * Brai_weight;
+    *bmsr = *bmsr / MIN_SENS * Brai_weight;
 }
 
-float Reynolds(int *msl, int *msr, int max_sens){
+
+void update_self_motion(int msl, int msr) { 
+	
+	// Compute deltas of the robot
+	float dr = (float)msr * SPEED_UNIT_RADS * WHEEL_RADIUS * DELTA_T;
+	float dl = (float)msl * SPEED_UNIT_RADS * WHEEL_RADIUS * DELTA_T;
+	float du = (dr + dl)/2.0;
+	float dtheta = (dr - dl)/AXLE_LENGTH;
+  
+	// Compute deltas in the environment
+	float theta = my_position[2];
+	float dx = du * cosf(theta);
+	float dy = du * sinf(theta);
+  
+	// Update position
+	my_position[0] += dx;
+	my_position[1] += dy;
+	my_position[2] += dtheta;
+  
+	// Keep orientation within -pi, pi
+	if (my_position[2] > M_PI) my_position[2] -= 2.0*M_PI;
+	if (my_position[2] < -M_PI) my_position[2] += 2.0*M_PI;
+	printf("epcuk %d: x=%f, z=%f, theta=%f\n", robot_id, my_position[0], -my_position[1], my_position[2]-1.57);
+}
+
+void compute_wheel_speeds(int *x_global, int *y_global)
+{
+	// Compute wanted position from Reynold's speed and current location
+	//float x = speed[robot_id][0]*cosf(loc[robot_id][2]) - speed[robot_id][1]*sinf(loc[robot_id][2]); // x in robot coordinates
+	//float z = -speed[robot_id][0]*sinf(loc[robot_id][2]) - speed[robot_id][1]*cosf(loc[robot_id][2]); // z in robot coordinates
+
+	float theta = my_position[2];
+
+	float x = *x_global * cosf(theta) + *y_global * sinf(theta);  // x in robot coordinates
+	float y = -*x_global * sinf(theta) + *y_global * cosf(theta); // z in robot coordinates
+																									  //	printf("id = %d, x = %f, y = %f\n", robot_id, x, z);
+	float Ku = 0.2;																					  // Forward control coefficient
+	float Kw = 1;																					  // Rotational control coefficient														  // Distance to the wanted position
+	float bearing = atan2(y, x);																	  // Orientation of the wanted position
+
+	// Compute forward control
+	float u = Ku * x;
+	// Compute rotational control
+	float w = Kw * bearing;
+
+	// Convert to wheel speeds!
+
+	*x_global = (u - AXLE_LENGTH * w / 2.0) * (10.0 / WHEEL_RADIUS);
+	*y_global = (u + AXLE_LENGTH * w / 2.0) * (10.0 / WHEEL_RADIUS);
+	//	printf("bearing = %f, u = %f, w = %f, msl = %f, msr = %f\n", bearing, u, w, msl, msr);
+}
+
+float Reynolds(int *msl, int *msr){
 
     float weight_rey;			// weight of reynolds rule in combined speed
 	//impose migrate urge
-	*msl = 10 * migr[0] + 100*(my_position[2] + 1.57)*MIN_SENS/max_sens;
-	*msr = 10 * migr[1] - 100*(my_position[2] + 1.57)*MIN_SENS/max_sens;
-	
+
+    *msl = MIGRATION_WEIGHT * (TARGET - my_position[0]) ;
+    *msr = MIGRATION_WEIGHT * (0 - my_position[1]) ;
+	compute_wheel_speeds(msl, msr);
 	// Adapt speed instinct to distance sensor values
 	//if (max_sens > MAX_SENS*0.7) {
-	weight_rey = 1 - max_sens/(2*MAX_SENS);
-	*msl *= weight_rey;
-	*msr *= weight_rey;
+	//weight_rey = 1 - max_sens/(2*MAX_SENS);
+	//*msl *= weight_rey;
+	//*msr *= weight_rey;
 	//}
-	return weight_rey;
+	return weight_rey=1;
 }
 
 void epuck_move(int msl, int msr){
-	msl = msl*MAX_SPEED_WEB/1000;
-	msr = msr*MAX_SPEED_WEB/1000;
+	msl *= SPEED_UNIT_RADS;
+	msr *= SPEED_UNIT_RADS;
 	wb_motor_set_velocity(left_motor, msl);
     wb_motor_set_velocity(right_motor, msr);
 }
+
 
 // the main function
 int main(){ 
     int msl, msr;			// Wheel speeds
     int bmsl=0, bmsr=0;
-    int sum_sensors, max_sens;  // Store highest sensor value   
-
+    int sum_sensors, max_sens=0;  // Store highest sensor value   
  	reset();			// Resetting the robot
 	// Forever
 	for(;;){
-
-        sum_sensors = 0;
-		max_sens = 0;
-
+		msl = 0; msr = 0;
         Braitenberg(&bmsl, &bmsr, &sum_sensors, &max_sens);       
         printf("epuck%d: bmsl= %d, bmsr= %d\n", robot_id, bmsl, bmsr);
-
-        float weight_rey = Reynolds(&msl, &msr, max_sens);
-		printf("epuck%d:  weight_rey= %f, msl= %d, msr= %d\n", robot_id, weight_rey, msl, msr);
+        if(max_sens < 400)
+        	Reynolds(&msl, &msr);
+		//printf("epuck%d:  weight_rey= %f, msl= %d, msr= %d\n", robot_id, weight_rey, msl, msr);
 
 		// combine speed of migrate and Braitenbergs, impose speed upper bound
 		msl += bmsl;
