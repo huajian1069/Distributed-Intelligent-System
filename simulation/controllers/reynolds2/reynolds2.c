@@ -1,11 +1,12 @@
 /*****************************************************************************/
 /* File:         raynolds2.c                                                 */
-/* Version:      2.0                                                         */
+/* Version:      3.0                                                         */
 /* Date:         06-Oct-15                                                   */
-/* Description:  Reynolds flocking with relative positions		     */
+/* Description:  Reynolds flocking with relative positions		             */
 /*                                                                           */
-/* Author: 	 06-Oct-15 by Ali Marjovi				     */
-/* Last revision:12-Oct-15 by Florian Maushart				     */
+/* Author: 	      06-Oct-15 by Ali Marjovi				                     */
+/* Last revision: 12-Oct-15 by Florian Maushart				                 */
+/* Modified to make it suitable for DIS project: Nov-19 by Group 17          */
 /*****************************************************************************/
 
 #include <stdio.h>
@@ -68,8 +69,8 @@ float relative_speed[N_GROUPS][FLOCK_SIZE][2]; // Speeds calculated with Reynold
 int initialized[N_GROUPS][FLOCK_SIZE];		   // != 0 if initial positions have been received
 float migr[2] = {0, -2};					   // Migration vector
 char *robot_name;
-
 float theta_robots[N_GROUPS][FLOCK_SIZE];
+
 /*
  * Reset the robot's devices and get its ID
  */
@@ -159,9 +160,6 @@ void update_self_motion(int msl, int msr)
 void compute_wheel_speeds(int *msl, int *msr)
 {
 	// Compute wanted position from Reynold's speed and current location
-	//float x = speed[robot_id][0]*cosf(loc[robot_id][2]) - speed[robot_id][1]*sinf(loc[robot_id][2]); // x in robot coordinates
-	//float z = -speed[robot_id][0]*sinf(loc[robot_id][2]) - speed[robot_id][1]*cosf(loc[robot_id][2]); // z in robot coordinates
-
 	float x = speed[group_id][robot_id][0] * cosf(my_position[2]) + speed[group_id][robot_id][1] * sinf(my_position[2]);  // x in robot coordinates
 	float z = -speed[group_id][robot_id][0] * sinf(my_position[2]) + speed[group_id][robot_id][1] * cosf(my_position[2]); // z in robot coordinates
 																														  //	printf("id = %d, x = %f, y = %f\n", robot_id, x, z);
@@ -172,14 +170,13 @@ void compute_wheel_speeds(int *msl, int *msr)
 
 	// Compute forward control
 	float u = Ku * range * cosf(bearing);
+
 	// Compute rotational control
 	float w = Kw * bearing;
 
 	// Convert to wheel speeds!
-
 	*msl = (u - AXLE_LENGTH * w / 2.0) * (1000.0 / WHEEL_RADIUS);
 	*msr = (u + AXLE_LENGTH * w / 2.0) * (1000.0 / WHEEL_RADIUS);
-	//	printf("bearing = %f, u = %f, w = %f, msl = %f, msr = %f\n", bearing, u, w, msl, msr);
 	limit(msl, MAX_SPEED);
 	limit(msr, MAX_SPEED);
 }
@@ -190,7 +187,7 @@ void compute_wheel_speeds(int *msl, int *msr)
 
 void reynolds_rules()
 {
-	int i, j, k, g;					  // Loop counters
+	int i, j, g;					  // Loop counters
 	float rel_avg_loc[N_GROUPS][2];   // Flock average positions
 	float rel_avg_speed[N_GROUPS][2]; // Flock average speeds
 	float abs_avg_loc[N_GROUPS][2];
@@ -213,12 +210,12 @@ void reynolds_rules()
 	{
 		for (i = 0; i < FLOCK_SIZE; i++)
 		{
-				for (j = 0; j < 2; j++)
-				{
-					rel_avg_speed[g][j] += relative_speed[g][i][j];
-					rel_avg_loc[g][j] += relative_pos[g][i][j];
-					abs_avg_loc[g][j] += absolute_pos[g][i][j];
-				}
+			for (j = 0; j < 2; j++)
+			{
+				rel_avg_speed[g][j] += relative_speed[g][i][j];
+				rel_avg_loc[g][j] += relative_pos[g][i][j];
+				abs_avg_loc[g][j] += absolute_pos[g][i][j];
+			}
 		}
 	}
 
@@ -280,12 +277,6 @@ void reynolds_rules()
 		speed[group_id][robot_id][0] += MIGRATION_WEIGHT * (migr[0] - abs_avg_loc[group_id][0]);
 		speed[group_id][robot_id][1] -= MIGRATION_WEIGHT * (migr[1] - abs_avg_loc[group_id][1]); //y axis of webots is inverted
 	}
-
-	// printf("Migration goal: %f %f\n", migr[0], migr[1]);
-
-	// printf("Robot speed: %f %f\n", speed[group_id][robot_id][0], speed[group_id][robot_id][1]);
-
-	// printf("My position: %f %f\n", my_position[0], my_position[1]);
 }
 
 /*
@@ -297,7 +288,6 @@ void send_ping(void)
 {
 	char out[20];
 	sprintf(out, "%d,%d,%.3f,%.3f", group_id, robot_id, my_position[0], my_position[1]);
-
 	wb_emitter_send(emitter2, out, strlen(out) + 1);
 }
 
@@ -329,18 +319,13 @@ void process_received_ping_messages(void)
 		sscanf(inbuffer, "%d,%d,%f,%f", &other_group_id, &other_robot_id, &other_x, &other_y);
 		absolute_pos[other_group_id][other_robot_id][0] = other_x;
 		absolute_pos[other_group_id][other_robot_id][1] = other_y;
-		// printf("Other position: %f %f\n", other_x, other_y);
 
 		// Get position update
-		//theta += dtheta_g[other_robot_id];
-		//theta_robots[other_robot_id] = 0.8*theta_robots[other_robot_id] + 0.2*theta;
 		prev_relative_pos[other_group_id][other_robot_id][0] = relative_pos[other_group_id][other_robot_id][0];
 		prev_relative_pos[other_group_id][other_robot_id][1] = relative_pos[other_group_id][other_robot_id][1];
 
 		relative_pos[other_group_id][other_robot_id][0] = range * cos(theta);		 // relative x pos
 		relative_pos[other_group_id][other_robot_id][1] = -1.0 * range * sin(theta); // relative y pos
-
-		//printf("Robot %s, from robot %d, x: %g, y: %g, theta %g, my theta %g\n",robot_name,other_robot_id,relative_pos[other_robot_id][0],relative_pos[other_robot_id][1],-atan2(y,x)*180.0/3.141592,my_position[2]*180.0/3.141592);
 
 		relative_speed[other_group_id][other_robot_id][0] = relative_speed[other_group_id][other_robot_id][0] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][0] - prev_relative_pos[other_group_id][other_robot_id][0]);
 		relative_speed[other_group_id][other_robot_id][1] = relative_speed[other_group_id][other_robot_id][1] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][1] - prev_relative_pos[other_group_id][other_robot_id][1]);
@@ -389,8 +374,6 @@ int main()
 		// Adapt Braitenberg values (empirical tests)
 		bmsl /= MIN_SENS;
 		bmsr /= MIN_SENS;
-		// bmsl = (bmsl * bmsl) / 100;
-		// bmsr = (bmsl * bmsr) / 100;
 
 		/* Send and get information */
 		send_ping(); // sending a ping to other robot, so they can measure their distance to this robot
@@ -428,7 +411,6 @@ int main()
 		msr_w = msr * MAX_SPEED_WEB / 1000;
 		wb_motor_set_velocity(left_motor, msl_w);
 		wb_motor_set_velocity(right_motor, msr_w);
-		//wb_differential_wheels_set_speed(msl,msr);
 
 		// Continue one step
 		wb_robot_step(TIME_STEP);
