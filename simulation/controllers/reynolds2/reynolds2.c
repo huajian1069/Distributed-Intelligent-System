@@ -213,14 +213,12 @@ void reynolds_rules()
 	{
 		for (i = 0; i < FLOCK_SIZE; i++)
 		{
-			if (i == robot_id)
-				continue; // don't consider yourself for the average
-			for (j = 0; j < 2; j++)
-			{
-				rel_avg_speed[g][j] += relative_speed[g][i][j];
-				rel_avg_loc[g][j] += relative_pos[g][i][j];
-				abs_avg_loc[g][j] += absolute_pos[g][i][j];
-			}
+				for (j = 0; j < 2; j++)
+				{
+					rel_avg_speed[g][j] += relative_speed[g][i][j];
+					rel_avg_loc[g][j] += relative_pos[g][i][j];
+					abs_avg_loc[g][j] += absolute_pos[g][i][j];
+				}
 		}
 	}
 
@@ -245,12 +243,12 @@ void reynolds_rules()
 	{
 		if (g != group_id)
 		{
-			if (pow(rel_avg_loc[g][0], 2) + pow(rel_avg_loc[g][1], 2) <
+			if (pow(rel_avg_loc[g][0] - rel_avg_loc[group_id][0], 2) + pow(rel_avg_loc[g][1] - rel_avg_loc[group_id][1], 2) <
 				RULE2_THRESHOLD)
 			{
 				for (j = 0; j < 2; j++)
 				{
-					dispersion[j] -= 1 / rel_avg_loc[g][j]; // Relative distance to k
+					dispersion[j] -= 1 / (rel_avg_loc[group_id][j] - rel_avg_loc[g][j]); // Relative distance to k
 				}
 			}
 		}
