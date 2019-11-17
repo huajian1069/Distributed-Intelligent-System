@@ -1,4 +1,4 @@
-#VRML_SIM R2019a utf8
+#VRML_SIM R2019b utf8
 WorldInfo {
   info [
     "Description"
@@ -519,44 +519,84 @@ DEF rock Solid {
   }
 }
 DEF epuck0 E-puck {
-  hidden position_0_0 1.5357847128286672e-08
-  hidden position_0_1 1.535789298512995e-08
-  translation -2.9 0 0
-  rotation 0 1 0 -1.5700000000112309
+  hidden position_0_0 1.535785306175897e-08
+  hidden position_0_1 -1.5357894454939576e-08
+  translation -2.9000000000000243 -3.198720128103939e-05 -1.1944571543457554e-11
+  rotation 3.348376694610692e-06 0.9999999999887783 -3.351356855239216e-06 -1.5700000009872692
   name "epuck0"
-  controller "flock_controller"
+  controller "obstacle_avoidance"
+  groundSensorsSlot [
+    Receiver {
+      name "receiver2"
+    }
+    Emitter {
+      name "emitter2"
+    }
+  ]
 }
 DEF epuck1 E-puck {
-  hidden position_0_0 1.5357847128286672e-08
-  hidden position_0_1 1.535789298512995e-08
-  translation -2.9 0 0.1
-  rotation 0 1 0 -1.5700000000112309
+  hidden position_0_0 1.535785205030727e-08
+  hidden position_0_1 -1.535789095896689e-08
+  translation -2.900000000000025 -3.1987201280992555e-05 0.09999999998805566
+  rotation 3.3483766886268558e-06 0.9999999999887783 -3.3513568624208634e-06 -1.5700000009873452
   name "epuck1"
-  controller "flock_controller"
+  controller "obstacle_avoidance"
+  groundSensorsSlot [
+    Emitter {
+      name "emitter2"
+    }
+    Receiver {
+      name "receiver2"
+    }
+  ]
 }
 DEF epuck2 E-puck {
-  hidden position_0_0 1.5357847128286672e-08
-  hidden position_0_1 1.535789298512995e-08
-  translation -2.9 0 -0.1
-  rotation 0 1 0 -1.5700000000112309
+  hidden position_0_0 1.5357850503416773e-08
+  hidden position_0_1 -1.535789539985899e-08
+  translation -2.900000000000024 -3.1987201281028985e-05 -0.10000000001194448
+  rotation 3.348376698869329e-06 0.9999999999887783 -3.3513568471719338e-06 -1.5700000009873216
   name "epuck2"
-  controller "flock_controller"
+  controller "obstacle_avoidance"
+  groundSensorsSlot [
+    Emitter {
+      name "emitter2"
+    }
+    Receiver {
+      name "receiver2"
+    }
+  ]
 }
 DEF epuck3 E-puck {
-  hidden position_0_0 1.5357847128286672e-08
-  hidden position_0_1 1.535789298512995e-08
-  translation -2.9 0 0.213892
-  rotation 0 1 0 -1.5700000000112309
+  hidden position_0_0 1.535784850952303e-08
+  hidden position_0_1 -1.535789095896689e-08
+  translation -2.900000000000024 -3.198720128094919e-05 0.2138919999880553
+  rotation 3.348376684048705e-06 0.9999999999887783 -3.3513568674861416e-06 -1.5700000009872743
   name "epuck3"
-  controller "flock_controller"
+  controller "obstacle_avoidance"
+  groundSensorsSlot [
+    Emitter {
+      name "emitter2"
+    }
+    Receiver {
+      name "receiver2"
+    }
+  ]
 }
 DEF epuck4 E-puck {
-  hidden position_0_0 1.5357847128286672e-08
-  hidden position_0_1 1.535789298512995e-08
-  translation -2.9 0 -0.2
-  rotation 0 1 0 -1.5700000000112309
+  hidden position_0_0 1.535784933043681e-08
+  hidden position_0_1 -1.535789175017754e-08
+  translation -2.900000000000025 -3.1987201281048067e-05 -0.20000000001194462
+  rotation 3.3483766784811417e-06 0.9999999999887783 -3.3513568687696764e-06 -1.5700000009872994
   name "epuck4"
-  controller "flock_controller"
+  controller "obstacle_avoidance"
+  groundSensorsSlot [
+    Emitter {
+      name "emitter2"
+    }
+    Receiver {
+      name "receiver2"
+    }
+  ]
 }
 DEF SUPERVISOR Robot {
   controller ""
