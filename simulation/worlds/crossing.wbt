@@ -229,7 +229,8 @@ DEF SUPERVISOR Robot {
     }
   ]
   name "super0"
-  controller ""
+  controller "performance_estimation_crossing"
+  controllerArgs "-1.9 0 0"
   supervisor TRUE
 }
 DEF SUPERVISOR Robot {
@@ -239,7 +240,8 @@ DEF SUPERVISOR Robot {
     }
   ]
   name "super1"
-  controller ""
+  controller "performance_estimation_crossing"
+  controllerArgs "-0.1 0 0"
   supervisor TRUE
 }
 DEF epuck_0_0 E-puck {

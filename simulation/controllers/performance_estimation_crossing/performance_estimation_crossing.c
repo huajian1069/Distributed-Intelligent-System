@@ -18,7 +18,7 @@
 #include <webots/emitter.h>
 #include <webots/supervisor.h>
 
-#define FLOCK_SIZE	4 		// Number of robots in flock
+#define FLOCK_SIZE	5 		// Number of robots in flock
 #define TIME_STEP	64		// [ms] Length of time step
 #define DIMENSION 2
 #define WEBOTS_MAX_VELOCITY 6.28
@@ -42,16 +42,17 @@ int t;
 /*
  * Initialize flock position and devices
  */
-void reset(void) {
+void reset(bool flag) {
 	wb_robot_init();
-
-	char rob[7] = "epuck0";
+	char rob[10] = "epuck_0_0";
+	if(flag) rob[6] = '1';
 	int i;
 	for (i=0;i<FLOCK_SIZE;i++) {
-		sprintf(rob,"epuck%d",i+offset);
+		printf("%s\n", rob);
 		robs[i] = wb_supervisor_node_get_from_def(rob);
 		robs_trans[i] = wb_supervisor_node_get_field(robs[i],"translation");
 		robs_rotation[i] = wb_supervisor_node_get_field(robs[i],"rotation");
+		rob[8]++;
 	}
 }
 
@@ -59,19 +60,19 @@ void reset(void) {
  * Utilise function
 */
 
-float dist(float *x, float *avg){
+float dist(float* x, float* avg){
 	float s = 0;
 	for(int i = 0; i < DIMENSION; i++){
-		s += pow(x[i] - avg[i], 2); 
+		s += pow((double)(x[i] - avg[i]), 2.0); 
 	}
-	return sqrt(s);
+	return (float)sqrt((double)s);
 }
 
 /*
 *	inner (dot) product of vectors
 */
 
-float dot(float *x, float*y){
+float dot(float *x, float *y){
 	return x[0] * y[0] + x[1] * y[1];
 }
 
@@ -79,6 +80,9 @@ float max(float x, float y){
 	return x > y ? x : y;
 }
 
+/*
+*	get the normalized migratory vector
+*/
 void getMigratoryUrge(float *migrUrg, float *avg){
 	float norm;
 	migrUrg[0] = migr[0] - avg[0];
@@ -151,18 +155,22 @@ void compute_fitness() {
  
 int main(int argc, char *args[]) {
 	int i;			// Index
-  
-	reset();
 
 	if(argc != 4){
 		printf("Please specify the migration urge from webots world file");
 		exit(1);
 	}
 	migr[0] = atof(args[1]);
-	migr[1] = atof(args[2]);
+	migr[1] = atof(args[3]);
 
+	bool flag;
+	if(!strcmp(args[1],"-0.1")) flag = true;
+	else flag = false;
+	printf("%s  ,  %f,   %d\n", args[1], migr[0], flag);
+	reset(flag);
 	// Compute reference fitness values
-		
+	
+
 	for(;;) {
 		wb_robot_step(TIME_STEP);
 		

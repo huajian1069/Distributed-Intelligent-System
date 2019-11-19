@@ -599,6 +599,7 @@ DEF epuck4 E-puck {
   ]
 }
 DEF SUPERVISOR Robot {
-  controller ""
+  controller "performance_estimation"
   supervisor TRUE
+  controllerArgs "2.3 0 0"
 }

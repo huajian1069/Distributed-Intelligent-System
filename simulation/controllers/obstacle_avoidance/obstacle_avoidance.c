@@ -406,7 +406,8 @@ int main()
 		// Add Braitenberg
 		msl += bmsl ;
 		msr += bmsr ;
-
+		//limit(&msl, 999);
+		//limit(&msr, 999);
 		// Set speed
 		msl_w = msl * MAX_SPEED_WEB / 1000;
 		msr_w = msr * MAX_SPEED_WEB / 1000;
