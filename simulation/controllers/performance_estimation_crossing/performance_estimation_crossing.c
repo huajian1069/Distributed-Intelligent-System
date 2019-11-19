@@ -143,8 +143,8 @@ void compute_fitness() {
 	// performance(overall)
 	k++;
 	avg_pt = avg_pt + (pt - avg_pt) / k;
-	printf("time:%d, Orientation: %f, Cohesion: %f, Velocity: %f, Performance(instant): %f, Performance(overall): %f\n", 
-			k, ot, ct, vt, pt, avg_pt);	
+	printf("group:%s, time:%d, Orientation:%f, Cohesion:%f, Velocity:%f, Perf(instant):%f, Perf(overall): %f\n", 
+			(fabs(migr[0]+0.1)<0.01)?"right1":"left0 ", k, ot, ct, vt, pt, avg_pt);	
 }
 
 
