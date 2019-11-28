@@ -68,7 +68,7 @@
 ###-----------------------------------------------------------------------------
 
 ### Do not modify: this includes Webots global Makefile.include
-C_SOURCES = optim.c reynolds2.c
+C_SOURCES = pso.c pso_obs_sup.c
 
 space :=
 space +=

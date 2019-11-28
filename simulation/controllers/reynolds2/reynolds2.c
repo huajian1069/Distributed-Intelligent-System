@@ -20,6 +20,9 @@
 #include <webots/emitter.h>
 #include <webots/receiver.h>
 
+#include "optim.h"
+
+
 #define NB_SENSORS 8	   // Number of distance sensors
 #define MIN_SENS 350	   // Minimum sensibility value
 #define MAX_SENS 4096	  // Maximum sensibility value
@@ -35,16 +38,16 @@
 #define DELTA_T 0.064			// Timestep (seconds)
 
 #define RULE1_THRESHOLD 0.2   // Threshold to activate aggregation rule. default 0.20
-#define RULE1_WEIGHT (0.6 / 10) // Weight of aggregation rule. default 0.6/10
+#define RULE1_WEIGHT (0.5 / 10) // Weight of aggregation rule. default 0.6/10
 
 #define RULE2_THRESHOLD 0.15		 // Threshold to activate dispersion rule. default 0.15
 #define RULE2_WEIGHT (0.02 / 10) // Weight of dispersion rule. default 0.02/10
 
-#define RULE3_WEIGHT (1.0 / 10) // Weight of consistency rule. default 1.0/10
+#define RULE3_WEIGHT (0.2 / 10) // Weight of consistency rule. default 1.0/10
 
 #define MIGRATION_NORM_WEIGHT (1.5 / 10) // Wheight of attraction towards the common goal. default 0.01/10
-#define MIGRATION_WEIGHT (0.5 / 10)
-#define BRAITENBERG_WEIGHT 10
+#define MIGRATION_WEIGHT (0.4 / 10)
+#define BRAITENBERG_WEIGHT 5
 #define MIGRATORY_URGE 1 // Tells the robots if they should just go forward or move towards a specific migratory direction
 
 #define ABS(x) ((x >= 0) ? (x) : -(x))
@@ -72,6 +75,8 @@ float migr[2] = {0, -2.2};					   // Migration vector
 char *robot_name;
 float theta_robots[N_GROUPS][FLOCK_SIZE];
 int last_timestamp[N_GROUPS][FLOCK_SIZE];
+
+
 
 /*
  * Reset the robot's devices and get its ID
@@ -114,6 +119,8 @@ static void reset()
 			initialized[f][i] = 0; // Set initialization to 0 (= not yet initialized)
 		}
 	}
+
+	optim_init();
 }
 
 /*
@@ -258,7 +265,7 @@ void reynolds_rules(int my_timestamp)
 			// printf("Res %f\n", rel_avg_loc[group_id][1]);
 			if (dist > 0 && dist < 2)
 			{
-				dispersion[0] = 10 + 10 * dist;
+				dispersion[0] = 5 + 5 * dist;
 			}
 		}
 	}
@@ -286,17 +293,10 @@ void reynolds_rules(int my_timestamp)
 	}
 	else
 	{
-		//float norm = pow(migr[0] - abs_avg_loc[group_id][0], 2) + pow(migr[1] - abs_avg_loc[group_id][1], 2);
-		//speed[group_id][robot_id][0] += MIGRATION_WEIGHT * (migr[0] - abs_avg_loc[group_id][0]) / norm;
-		//speed[group_id][robot_id][1] -= MIGRATION_WEIGHT * (migr[1] - abs_avg_loc[group_id][1]) / norm; //y axis of webots is inverted
-		
-		speed[group_id][robot_id][0] += MIGRATION_WEIGHT * (migr[0] - abs_avg_loc[group_id][0]);
-		speed[group_id][robot_id][1] -= MIGRATION_WEIGHT * (migr[1] - abs_avg_loc[group_id][1]);
-
-		// printf("%f %f\n", MIGRATION_WEIGHT * (migr[0] - abs_avg_loc[group_id][0]) / norm, MIGRATION_WEIGHT * (migr[1] - abs_avg_loc[group_id][1]) / norm);
-	}
-
-	
+		float norm = pow(migr[0] - abs_avg_loc[group_id][0], 2) + pow(migr[1] - abs_avg_loc[group_id][1], 2);
+		speed[group_id][robot_id][0] += MIGRATION_WEIGHT * (migr[0] - abs_avg_loc[group_id][0]) / norm;
+		speed[group_id][robot_id][1] -= MIGRATION_WEIGHT * (migr[1] - abs_avg_loc[group_id][1]) / norm; //y axis of webots is inverted
+	}	
 }
 
 /*
@@ -335,26 +335,28 @@ void process_received_ping_messages(int timestamp)
 		theta = -atan2(y, x);
 		theta = theta + my_position[2]; // find the relative theta;
 		range = sqrt((1 / message_rssi));
+		if (range < 0.2) {
+			sscanf(inbuffer, "%d,%d,%f,%f", &other_group_id, &other_robot_id, &other_x, &other_y);
+			last_timestamp[other_group_id][other_robot_id] = timestamp;
 
-		sscanf(inbuffer, "%d,%d,%f,%f", &other_group_id, &other_robot_id, &other_x, &other_y);
-		last_timestamp[other_group_id][other_robot_id] = timestamp;
+			absolute_pos[other_group_id][other_robot_id][0] = other_x;
+			absolute_pos[other_group_id][other_robot_id][1] = other_y;
 
-		absolute_pos[other_group_id][other_robot_id][0] = other_x;
-		absolute_pos[other_group_id][other_robot_id][1] = other_y;
+			// Get position update
+			prev_relative_pos[other_group_id][other_robot_id][0] = relative_pos[other_group_id][other_robot_id][0];
+			prev_relative_pos[other_group_id][other_robot_id][1] = relative_pos[other_group_id][other_robot_id][1];
 
-		// Get position update
-		prev_relative_pos[other_group_id][other_robot_id][0] = relative_pos[other_group_id][other_robot_id][0];
-		prev_relative_pos[other_group_id][other_robot_id][1] = relative_pos[other_group_id][other_robot_id][1];
+			relative_pos[other_group_id][other_robot_id][0] = range * cos(theta);		 // relative x pos
+			relative_pos[other_group_id][other_robot_id][1] = -1.0 * range * sin(theta); // relative y pos
 
-		relative_pos[other_group_id][other_robot_id][0] = range * cos(theta);		 // relative x pos
-		relative_pos[other_group_id][other_robot_id][1] = -1.0 * range * sin(theta); // relative y pos
-
-		relative_speed[other_group_id][other_robot_id][0] = relative_speed[other_group_id][other_robot_id][0] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][0] - prev_relative_pos[other_group_id][other_robot_id][0]);
-		relative_speed[other_group_id][other_robot_id][1] = relative_speed[other_group_id][other_robot_id][1] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][1] - prev_relative_pos[other_group_id][other_robot_id][1]);
+			relative_speed[other_group_id][other_robot_id][0] = relative_speed[other_group_id][other_robot_id][0] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][0] - prev_relative_pos[other_group_id][other_robot_id][0]);
+			relative_speed[other_group_id][other_robot_id][1] = relative_speed[other_group_id][other_robot_id][1] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][1] - prev_relative_pos[other_group_id][other_robot_id][1]);
+		}
 
 		wb_receiver_next_packet(receiver2);
 	}
 }
+
 
 // the main function
 int main()
@@ -376,6 +378,13 @@ int main()
 	// Forever
 	for (;;timestamp++)
 	{
+		optim_state_t optim_state = optim_update(ds, NB_SENSORS);
+		if (optim_state == OPTIM_CHANGE_CONFIG) {
+			printf("Change config %d %d...\n", optim_config.n_params, optim_config.n_iters);
+		}
+		if (optim_state == OPTIM_SEND_STATS) {
+			printf("Sending stats...\n");
+		}
 
 		bmsl = 0;
 		bmsr = 0;
@@ -435,10 +444,6 @@ int main()
 		// Set speed
 		msl_w = msl * MAX_SPEED_WEB / 1000;
 		msr_w = msr * MAX_SPEED_WEB / 1000;
-
-
-
-
 
 		wb_motor_set_velocity(left_motor, msl_w);
 		wb_motor_set_velocity(right_motor, msr_w);

@@ -244,6 +244,93 @@ DEF SUPERVISOR Robot {
   controllerArgs "-0.1 0 0"
   supervisor TRUE
 }
+DEF SUPERVISOR Robot {
+  translation 0.1 0 0.1
+  children [
+    DEF emitter0 Emitter {
+      name "emitter0"
+    }
+    DEF emitter1 Emitter {
+      name "emitter1"
+      channel 2
+    }
+    DEF emitter2 Emitter {
+      name "emitter2"
+      channel 4
+    }
+    DEF emitter3 Emitter {
+      name "emitter3"
+      channel 6
+    }
+    DEF emitter4 Emitter {
+      name "emitter4"
+      channel 8
+    }
+    DEF emitter5 Emitter {
+      name "emitter5"
+      channel 10
+    }
+    DEF emitter6 Emitter {
+      name "emitter6"
+      channel 12
+    }
+    DEF emitter7 Emitter {
+      name "emitter7"
+      channel 14
+    }
+    DEF emitter8 Emitter {
+      name "emitter8"
+      channel 16
+    }
+    DEF emitter9 Emitter {
+      name "emitter9"
+      channel 18
+    }
+    DEF receiver0 Receiver {
+      name "receiver0"
+      channel 1
+    }
+    DEF receiver1 Receiver {
+      name "receiver1"
+      channel 3
+    }
+    DEF receiver2 Receiver {
+      name "receiver2"
+      channel 5
+    }
+    DEF receiver3 Receiver {
+      name "receiver3"
+      channel 7
+    }
+    DEF receiver4 Receiver {
+      name "receiver4"
+      channel 9
+    }
+    DEF receiver5 Receiver {
+      name "receiver5"
+      channel 11
+    }
+    DEF receiver6 Receiver {
+      name "receiver6"
+      channel 13
+    }
+    DEF receiver7 Receiver {
+      name "receiver7"
+      channel 15
+    }
+    DEF receiver8 Receiver {
+      name "receiver8"
+      channel 17
+    }
+    DEF receiver9 Receiver {
+      name "receiver9"
+      channel 19
+    }
+  ]
+  name "pso_supervisor"
+  controller "pso_obs_sup"
+  supervisor TRUE
+}
 DEF epuck_0_0 E-puck {
   translation -0.102305 -3.18597e-05 -0.101882
   rotation -0.001435789924665121 0.999997947530817 0.0014294899249956776 1.5529903061004253
@@ -259,6 +346,16 @@ DEF epuck_0_0 E-puck {
       name "emitter2"
       type "infra-red"
       maxRange 0.25
+      channel 1
+    }
+  ]
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 0
+    }
+    Emitter {
+      name "emitter_super"
       channel 1
     }
   ]
@@ -281,6 +378,16 @@ DEF epuck_0_1 E-puck {
       channel 1
     }
   ]
+    turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 2
+    }
+    Emitter {
+      name "emitter_super"
+      channel 3
+    }
+  ]
 }
 DEF epuck_0_2 E-puck {
   translation -0.09999999997420164 -3.198720128094225e-05 0.10000000001196506
@@ -298,6 +405,16 @@ DEF epuck_0_2 E-puck {
       type "infra-red"
       maxRange 0.25
       channel 1
+    }
+  ]
+    turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 4
+    }
+    Emitter {
+      name "emitter_super"
+      channel 5
     }
   ]
 }
@@ -319,6 +436,16 @@ DEF epuck_0_3 E-puck {
       channel 1
     }
   ]
+    turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 6
+    }
+    Emitter {
+      name "emitter_super"
+      channel 7
+    }
+  ]
 }
 DEF epuck_0_4 E-puck {
   translation -0.0999999999742016 -3.198720128086939e-05 0.2000000000119652
@@ -336,6 +463,16 @@ DEF epuck_0_4 E-puck {
       type "infra-red"
       maxRange 0.25
       channel 1
+    }
+  ]
+    turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 8
+    }
+    Emitter {
+      name "emitter_super"
+      channel 9
     }
   ]
 }
@@ -357,6 +494,16 @@ DEF epuck_1_0 E-puck {
       channel 1
     }
   ]
+    turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 10
+    }
+    Emitter {
+      name "emitter_super"
+      channel 11
+    }
+  ]
 }
 DEF epuck_1_1 E-puck {
   translation -1.8999999999742017 -3.198720128072367e-05 -0.10000000001196521
@@ -374,6 +521,16 @@ DEF epuck_1_1 E-puck {
       type "infra-red"
       maxRange 0.25
       channel 1
+    }
+  ]
+    turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 12
+    }
+    Emitter {
+      name "emitter_super"
+      channel 13
     }
   ]
 }
@@ -395,6 +552,16 @@ DEF epuck_1_2 E-puck {
       channel 1
     }
   ]
+    turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 14
+    }
+    Emitter {
+      name "emitter_super"
+      channel 15
+    }
+  ]
 }
 DEF epuck_1_3 E-puck {
   translation -1.9000000000000246 -3.198720128107235e-05 -0.20000000001194432
@@ -414,6 +581,16 @@ DEF epuck_1_3 E-puck {
       channel 1
     }
   ]
+    turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 16
+    }
+    Emitter {
+      name "emitter_super"
+      channel 17
+    }
+  ]
 }
 DEF epuck_1_4 E-puck {
   translation -1.900000000000025 -3.1987201280999494e-05 0.19999999998805543
@@ -431,6 +608,16 @@ DEF epuck_1_4 E-puck {
       type "infra-red"
       maxRange 0.25
       channel 1
+    }
+  ]
+    turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 18
+    }
+    Emitter {
+      name "emitter_super"
+      channel 19
     }
   ]
 }
