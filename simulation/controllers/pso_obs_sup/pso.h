@@ -9,7 +9,7 @@
 #define FONT "Arial"
 
 #define NB_SENSOR 8
-#define DATASIZE 2*NB_SENSOR+6
+#define DATASIZE 10
 #define SWARMSIZE 10
 
 // Functions

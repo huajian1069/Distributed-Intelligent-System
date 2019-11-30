@@ -6,7 +6,7 @@
 #include <webots/supervisor.h>
 #include <webots/robot.h>
 
-#define ROBOTS 5
+#define ROBOTS 10
 #define MAX_ROB ROBOTS
 #define ROB_RAD 0.035
 #define ARENA_SIZE 0.94
@@ -46,6 +46,8 @@ const double *loc[MAX_ROB];
 const double *rot[MAX_ROB];
 double new_loc[MAX_ROB][3];
 double new_rot[MAX_ROB][4];
+double initial_loc[MAX_ROB][3];
+double initial_rot[MAX_ROB][4];
 
 void calc_fitness(double[][DATASIZE], double[], int, int);
 void nRandom(int[][SWARMSIZE], int);
@@ -63,36 +65,23 @@ void reset(void)
     char robot_name[15];
     char emitter_name[15];
     char receiver_name[15];
-    sprintf(robot_name, "epuck_0_%d", i);
+    sprintf(robot_name, "epuck_%d_%d", i / 5, i % 5);
     sprintf(emitter_name, "emitter%d", i);
     sprintf(receiver_name, "receiver%d", i);
 
     robs[i] = wb_supervisor_node_get_from_def(robot_name);
     loc[i] = wb_supervisor_field_get_sf_vec3f(wb_supervisor_node_get_field(robs[i], "translation"));
-    new_loc[i][0] = loc[i][0];
-    new_loc[i][1] = loc[i][1];
-    new_loc[i][2] = loc[i][2];
+    initial_loc[i][0] = new_loc[i][0] = loc[i][0];
+    initial_loc[i][1] = new_loc[i][1] = loc[i][1];
+    initial_loc[i][2] = new_loc[i][2] = loc[i][2];
     rot[i] = wb_supervisor_field_get_sf_rotation(wb_supervisor_node_get_field(robs[i], "rotation"));
-    new_rot[i][0] = rot[i][0];
-    new_rot[i][1] = rot[i][1];
-    new_rot[i][2] = rot[i][2];
-    new_rot[i][3] = rot[i][3];
+    initial_rot[i][0] = new_rot[i][0] = rot[i][0];
+    initial_rot[i][1] = new_rot[i][1] = rot[i][1];
+    initial_rot[i][2] = new_rot[i][2] = rot[i][2];
+    initial_rot[i][3] = new_rot[i][3] = rot[i][3];
     emitter[i] = wb_robot_get_device(emitter_name);
     rec[i] = wb_robot_get_device(receiver_name);
   }
-
-  /*
-  for (i = 0; i < ROBOTS; i++) {
-    buffer[0] = 5;
-    buffer[1] = 1;
-    buffer[2] = 1;
-    buffer[3] = 1;
-    buffer[4] = 1;
-    buffer[5] = 1;
-    buffer[6] = 100;
-    wb_emitter_send(emitter[i], (void *)buffer, (DATASIZE + 1) * sizeof(double));
-  }
-  */
 }
 
 /* MAIN - Distribute and test conctrollers */
@@ -184,6 +173,10 @@ int main()
   return 0;
 }
 
+void initialise_position(int rob_id) {
+  wb_supervisor_field_set_sf_vec3f(wb_supervisor_node_get_field(robs[rob_id],"translation"), initial_loc[rob_id]);
+  wb_supervisor_field_set_sf_rotation(wb_supervisor_node_get_field(robs[rob_id],"rotation"), initial_rot[rob_id]);
+}
 
 // Distribute fitness functions among robots
 void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its, int numRobs)
@@ -195,7 +188,8 @@ void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its,
   /* Send data to robots */
   for (i = 0; i < numRobs; i++)
   {
-    // random_pos(i);
+    initialise_position(i);
+
     buffer[0] = DATASIZE;
     for (j = 0; j < DATASIZE; j++)
     {
@@ -212,7 +206,6 @@ void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its,
   /* Get fitness values */
   for (i = 0; i < numRobs; i++)
   {
-    printf("D %f\n", rbuffer[0]);
     rbuffer = (double *)wb_receiver_get_data(rec[i]);
     fit[i] = rbuffer[0];
     wb_receiver_next_packet(rec[i]);
@@ -231,7 +224,6 @@ void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its,
 /************************************************************************************/
 void fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int neighbors[SWARMSIZE][SWARMSIZE])
 {
-
   calc_fitness(weights, fit, FIT_ITS, ROBOTS);
 
 #if NEIGHBORHOOD == RAND_NB

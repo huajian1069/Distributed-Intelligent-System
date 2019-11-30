@@ -9,6 +9,8 @@ typedef struct _optim_stats_t {
   double max_prox;
   double sum_prox;
   int iter_counter;
+  double max_speed;
+  double sum_speed;
   bool done;
 } optim_stats_t;
 
@@ -28,7 +30,7 @@ typedef enum _optim_state_t {
 optim_stats_t optim_stats;
 optim_config_t optim_config;
 
-optim_state_t optim_update(WbDeviceTag *ds, int ds_n);
+optim_state_t optim_update(WbDeviceTag *ds, int ds_n,  double msl_w, double msr_w);
 void optim_init();
 
 #endif

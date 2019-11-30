@@ -67,6 +67,7 @@ float relative_pos[N_GROUPS][FLOCK_SIZE][3];	  // relative X, Z, Theta of all ro
 float prev_relative_pos[N_GROUPS][FLOCK_SIZE][3]; // Previous relative  X, Z, Theta values
 float absolute_pos[N_GROUPS][FLOCK_SIZE][2];
 float my_position[3];						   // X, Z, Theta of the current robot
+float initial_position[3];
 float prev_my_position[3];					   // X, Z, Theta of the current robot in the previous time step
 float speed[N_GROUPS][FLOCK_SIZE][2];		   // Speeds calculated with Reynold's rules
 float relative_speed[N_GROUPS][FLOCK_SIZE][2]; // Speeds calculated with Reynold's rules
@@ -75,7 +76,6 @@ float migr[2] = {0, -2.2};					   // Migration vector
 char *robot_name;
 float theta_robots[N_GROUPS][FLOCK_SIZE];
 int last_timestamp[N_GROUPS][FLOCK_SIZE];
-
 
 
 /*
@@ -378,14 +378,6 @@ int main()
 	// Forever
 	for (;;timestamp++)
 	{
-		optim_state_t optim_state = optim_update(ds, NB_SENSORS);
-		if (optim_state == OPTIM_CHANGE_CONFIG) {
-			printf("Change config %d %d...\n", optim_config.n_params, optim_config.n_iters);
-		}
-		if (optim_state == OPTIM_SEND_STATS) {
-			printf("Sending stats...\n");
-		}
-
 		bmsl = 0;
 		bmsr = 0;
 		sum_sensors = 0;
@@ -447,6 +439,19 @@ int main()
 
 		wb_motor_set_velocity(left_motor, msl_w);
 		wb_motor_set_velocity(right_motor, msr_w);
+
+
+		optim_state_t optim_state = optim_update(ds, NB_SENSORS, msl_w, msr_w);
+		if (optim_state == OPTIM_CHANGE_CONFIG) {
+			// printf("Change config %d %d...\n", optim_config.n_params, optim_config.n_iters);
+			for (int k = 0; k < 8; k++) {
+				e_puck_matrix[0] = optim_config.params[k];
+				e_puck_matrix[15-k] = optim_config.params[k];
+			}
+		}
+		if (optim_state == OPTIM_SEND_STATS) {
+			// printf("Sending stats: %f %f...\n", optim_stats.sum_prox, optim_stats.max_prox);
+		}
 
 		// Continue one step
 		wb_robot_step(TIME_STEP);

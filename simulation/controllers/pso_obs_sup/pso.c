@@ -102,6 +102,7 @@ double *pso(int n_swarmsize, int n_nb, double lweight, double nbweight, double v
 
   // Best performances are initially current performances
   findPerformance(swarm, perf, NULL, EVOLVE, robots, neighbors);
+  
   for (i = 0; i < swarmsize; i++)
   {
     lbestperf[i] = perf[i];
