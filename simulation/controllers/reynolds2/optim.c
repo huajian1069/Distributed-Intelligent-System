@@ -4,6 +4,7 @@
 #include <webots/receiver.h>
 #include <webots/robot.h>
 #include <webots/distance_sensor.h>
+#include <stdlib.h>
 
 WbDeviceTag emitter;
 WbDeviceTag receiver;
@@ -86,7 +87,7 @@ bool recv_config()
 void collect_stats(WbDeviceTag *ds, int ds_n, double msl_w, double msr_w)
 {
 	double max_prox = 0;
-	double max_speed = (msl_w > msr_w) ? msl_w : msr_w;
+	double max_speed = (abs(msl_w) > abs(msr_w)) ? abs(msl_w) : abs(msr_w);
 
 	// Speed should not exceed 6.28
 	if (max_speed > 6) { 
@@ -125,7 +126,7 @@ void send_stats()
 
 	// Calculate fitness
 	fit = optim_stats.max_prox + (optim_stats.sum_prox / optim_stats.iter_counter);
-	fit -= optim_stats.max_speed + (optim_stats.sum_speed / optim_stats.iter_counter);
+	fit += optim_stats.max_speed + (optim_stats.sum_speed / optim_stats.iter_counter) * 100000000;
 
 	// Send fitness
 	buffer[0] = fit;

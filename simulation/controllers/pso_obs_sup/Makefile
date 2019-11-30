@@ -68,7 +68,7 @@
 ###-----------------------------------------------------------------------------
 
 ### Do not modify: this includes Webots global Makefile.include
-C_SOURCES = pso.c pso_obs_sup.c
+C_SOURCES = pso.c pso_obs_sup.c metrics.c
 
 space :=
 space +=

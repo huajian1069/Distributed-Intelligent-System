@@ -8,9 +8,7 @@
 /**************************************************/
 #define FONT "Arial"
 
-#define NB_SENSOR 8
-#define DATASIZE 10
-#define SWARMSIZE 10
+#include "config.h"
 
 // Functions
 double* pso(int,int,double,double,double,double,double,int,int,int); // Run particle swarm optimization

@@ -1,43 +1,12 @@
 #include <stdio.h>
 #include <math.h>
+#include "config.h"
 #include "pso.h"
+#include "metrics.h"
 #include <webots/emitter.h>
 #include <webots/receiver.h>
 #include <webots/supervisor.h>
 #include <webots/robot.h>
-
-#define ROBOTS 10
-#define MAX_ROB ROBOTS
-#define ROB_RAD 0.035
-#define ARENA_SIZE 0.94
-
-//#define NB_SENSOR 8                     // Number of proximity sensors
-
-/* PSO definitions */
-//#define SWARMSIZE 10                    // Number of particles in swarm (defined in pso.h)
-#define NB 1          // Number of neighbors on each side
-#define LWEIGHT 2.0   // Weight of attraction to personal best
-#define NBWEIGHT 2.0  // Weight of attraction to neighborhood best
-#define VMAX 40.0     // Maximum velocity particle can attain
-#define MININIT -20.0 // Lower bound on initialization value
-#define MAXINIT 20.0  // Upper bound on initialization value
-#define ITS 20        // Number of iterations to run
-//#define DATASIZE 2*(NB_SENSOR+2+1)      // Number of elements in particle (2 Neurons with 8 proximity sensors
-// + 2 recursive/lateral conenctions + 1 bias)
-// defined in pso.h
-
-/* Neighborhood types */
-#define STANDARD -1
-#define RAND_NB 0
-#define NCLOSE_NB 1
-#define FIXEDRAD_NB 2
-
-/* Fitness definitions */
-#define FIT_ITS 180 // Number of fitness steps to run during optimization
-
-#define FINALRUNS 10
-#define NEIGHBORHOOD STANDARD
-#define RADIUS 0.8
 
 static WbNodeRef robs[MAX_ROB];
 WbDeviceTag emitter[MAX_ROB];
@@ -58,14 +27,13 @@ void fixedRadius(int[][SWARMSIZE], double);
 void reset(void)
 {
   int i;
-  double buffer[255];
 
   for (i = 0; i < ROBOTS; i++)
   {
     char robot_name[15];
     char emitter_name[15];
     char receiver_name[15];
-    sprintf(robot_name, "epuck_%d_%d", i / 5, i % 5);
+    sprintf(robot_name, "epuck_%d_%d", i / FLOCK_SIZE, i % FLOCK_SIZE);
     sprintf(emitter_name, "emitter%d", i);
     sprintf(receiver_name, "receiver%d", i);
 
@@ -82,6 +50,8 @@ void reset(void)
     emitter[i] = wb_robot_get_device(emitter_name);
     rec[i] = wb_robot_get_device(receiver_name);
   }
+
+  metrics_init(robs);
 }
 
 /* MAIN - Distribute and test conctrollers */
@@ -173,9 +143,10 @@ int main()
   return 0;
 }
 
-void initialise_position(int rob_id) {
-  wb_supervisor_field_set_sf_vec3f(wb_supervisor_node_get_field(robs[rob_id],"translation"), initial_loc[rob_id]);
-  wb_supervisor_field_set_sf_rotation(wb_supervisor_node_get_field(robs[rob_id],"rotation"), initial_rot[rob_id]);
+void initialise_position(int rob_id)
+{
+  wb_supervisor_field_set_sf_vec3f(wb_supervisor_node_get_field(robs[rob_id], "translation"), initial_loc[rob_id]);
+  wb_supervisor_field_set_sf_rotation(wb_supervisor_node_get_field(robs[rob_id], "rotation"), initial_rot[rob_id]);
 }
 
 // Distribute fitness functions among robots
@@ -185,7 +156,7 @@ void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its,
   double *rbuffer;
   int i, j;
 
-  /* Send data to robots */
+  // Initialise robots for fitness
   for (i = 0; i < numRobs; i++)
   {
     initialise_position(i);
@@ -198,16 +169,23 @@ void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its,
     buffer[DATASIZE + 1] = its;
     wb_emitter_send(emitter[i], (void *)buffer, (DATASIZE + 2) * sizeof(double));
   }
+  metrics_reset();
 
-  /* Wait for response */
+  // Keep robots move and collect data
   while (wb_receiver_get_queue_length(rec[0]) == 0)
+  {
     wb_robot_step(64);
+    metrics_update(robs);
+  }
 
-  /* Get fitness values */
+  // Get fitness, end of run
   for (i = 0; i < numRobs; i++)
   {
     rbuffer = (double *)wb_receiver_get_data(rec[i]);
-    fit[i] = rbuffer[0];
+    fit[i] = rbuffer[0] * (1/metrics_get_performance());
+
+    printf("Fitness: %f * (1/%f) = %f\n", rbuffer[0], metrics_get_performance(), fit[i]);
+
     wb_receiver_next_packet(rec[i]);
   }
 }
@@ -320,17 +298,14 @@ void nClosest(int neighbors[SWARMSIZE][SWARMSIZE], int numNB)
 /* Choose all robots within some range */
 void fixedRadius(int neighbors[SWARMSIZE][SWARMSIZE], double radius)
 {
-
   int i, j;
 
   /* Get neighbors for each robot */
   for (i = 0; i < ROBOTS; i++)
   {
-
     /* Find robots within range */
     for (j = 0; j < ROBOTS; j++)
     {
-
       if (i == j)
         continue;
 
