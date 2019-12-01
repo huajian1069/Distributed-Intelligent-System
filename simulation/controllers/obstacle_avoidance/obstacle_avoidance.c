@@ -34,10 +34,10 @@
 #define WHEEL_RADIUS 0.0205		// Wheel radius (meters)
 #define DELTA_T 0.064			// Timestep (seconds)
 
-#define RULE1_THRESHOLD 0.20   // Threshold to activate aggregation rule. default 0.20
+#define RULE1_THRESHOLD 0.10   // Threshold to activate aggregation rule. default 0.20
 #define RULE1_WEIGHT (2.0 / 10) // Weight of aggregation rule. default 0.6/10
 
-#define RULE2_THRESHOLD 0.15		 // Threshold to activate dispersion rule. default 0.15
+#define RULE2_THRESHOLD 0.3		 // Threshold to activate dispersion rule. default 0.15
 #define RULE2_WEIGHT (0.02 / 10) // Weight of dispersion rule. default 0.02/10
 
 #define RULE3_WEIGHT (1.0 / 10) // Weight of consistency rule. default 1.0/10
@@ -48,10 +48,19 @@
 
 #define ABS(x) ((x >= 0) ? (x) : -(x))
 
+#define OBS_RANGE 70
+
+#define OBS_GAIN 200
+#define NUM_SENS_POTENTIAL 6
+
+
 WbDeviceTag left_motor;  //handler for left wheel of the robot
 WbDeviceTag right_motor; //handler for the right wheel of the robot
 
+
 int e_puck_matrix[16] = {47, 59, 64, 50, 38, -48, -66, -86, -82, -68, -46, 38, 50, 66, 58, 48}; // for obstacle avoidance
+int front_sensors[NUM_SENS_POTENTIAL]={ 0, 1, 2, 5, 6, 7};
+float sensor_vectors[NUM_SENS_POTENTIAL][2]={{0.351441063,-0.936197964},{0.865973584,-0.500089743},{1,0},{-1,0},{-0.865973584,-0.500089743},{-0.351441063,-0.936197964}};
 
 WbDeviceTag ds[NB_SENSORS]; // Handle for the infrared distance sensors
 WbDeviceTag receiver2;		// Handle for the receiver node
@@ -67,10 +76,12 @@ float prev_my_position[3];					   // X, Z, Theta of the current robot in the pre
 float speed[N_GROUPS][FLOCK_SIZE][2];		   // Speeds calculated with Reynold's rules
 float relative_speed[N_GROUPS][FLOCK_SIZE][2]; // Speeds calculated with Reynold's rules
 int initialized[N_GROUPS][FLOCK_SIZE];		   // != 0 if initial positions have been received
-float migr[2] = {0, -5};					   // Migration vector
+float migr[2] = {0, -4};					   // Migration vector
 char *robot_name;
 float theta_robots[N_GROUPS][FLOCK_SIZE];
-
+int potential_left;
+int potential_right;
+float w_difference;
 /*
  * Reset the robot's devices and get its ID
  */
@@ -182,6 +193,68 @@ void compute_wheel_speeds(int *msl, int *msr)
 	limit(msr, MAX_SPEED);
 }
 
+// update speeds according to the potential fiel
+void potential_field()
+{
+	int distances[NUM_SENS_POTENTIAL];   // Array for the distance sensor readings
+	int max_sens=0;				 // Store highest sensor value
+	int sum_sensors=0;
+	float mean_vector[2]={0,0};
+	float normal_vector[2];
+	double angle;
+	double norm;
+
+	for (int i = 0; i < NUM_SENS_POTENTIAL; i++){
+		distances[i] = wb_distance_sensor_get_value(ds[front_sensors[i]]) > 0 ? wb_distance_sensor_get_value(ds[front_sensors[i]]) : 0;
+		sum_sensors += distances[i];								  // Add up sensor values
+		max_sens = max_sens > distances[i] ? max_sens : distances[i]; // Check if new highest sensor value
+	}
+	if (sum_sensors<=0) return;
+  //printf("robot id %d %s %d\n", robot_id, "sum_sensors", sum_sensors);
+	for (int i = 0; i < NUM_SENS_POTENTIAL; i++){
+     for (int j=0;j<2;j++){
+        mean_vector[j]+=((float)distances[i]/(float)sum_sensors)*sensor_vectors[i][j];
+			}
+	}
+	if (mean_vector[0]<0){
+		normal_vector[0]=(-mean_vector[1]);
+		normal_vector[1]=mean_vector[0];
+	}else{
+		normal_vector[0]=mean_vector[1];
+		normal_vector[1]=(-mean_vector[0]);
+	}
+	//printf("robot id %d %s %f\n", robot_id, "potential field", angle);
+	/*normal_vector[0]=1;
+	normal_vector[1]=sin(angle)/cos(angle);
+	norm=sqrt(pow(normal_vector[0],2)+pow(normal_vector[1],2));
+	normal_vector[0]=normal_vector[0]/norm;
+	normal_vector[1]=normal_vector[1]/norm;*/
+	if (max_sens>OBS_RANGE){
+	 	//w_difference=(log10(max_sens-OBS_RANGE))*sqrt(pow(normal_vector[0],2)+pow(normal_vector[1]+1,2))*(ABS(normal_vector[0])/normal_vector[0]);
+      w_difference=2*(max_sens-OBS_RANGE)*sqrt(pow(normal_vector[0],2)+pow(normal_vector[1]+1,2))*(ABS(normal_vector[0])/normal_vector[0]);
+			//if(normal_vector[0]<0){
+			//	 potential_right=OBS_GAIN*(log10(max_sens-OBS_RANGE))+50*w_difference/2;
+			//	 potential_left=OBS_GAIN*(log10(max_sens-OBS_RANGE))-50*w_difference/2;
+			//}else{
+      //    potential_left=OBS_GAIN*(log10(max_sens-OBS_RANGE))+50*w_difference/2;
+			//		potential_right=OBS_GAIN*(log10(max_sens-OBS_RANGE))-50*w_difference/2;
+			//}
+			potential_right=OBS_GAIN*(log10(max_sens-OBS_RANGE))-w_difference/2;
+			potential_left=OBS_GAIN*(log10(max_sens-OBS_RANGE))+w_difference/2;
+
+  }else {
+		potential_right=0;
+		potential_left=0;
+	}
+
+	//printf("robot id %d %s %f\n", robot_id, "w diff", w_difference);
+	//printf("robot id %d %s %f %f\n", robot_id, "potential field",normal_vector[0],normal_vector[1]);
+	//printf("robot id %d %s %d %d %d %d\n", robot_id, "potential field", distances[0], distances[1], distances[2], distances[3]);
+	//printf("robot id %d %s r %f norm %f %f %f\n", robot_id, "potential field", ((log10(max_sens-OBS_RANGE))-w_difference/2), sqrt(pow(normal_vector[0],2)+pow(normal_vector[1]+1,2))*(ABS(normal_vector[0])/normal_vector[0]), normal_vector[0], normal_vector[1]);
+
+}
+
+
 /*
  *  Update speed according to Reynold's rules
  */
@@ -237,20 +310,21 @@ void reynolds_rules()
 	}
 
 	/* Rule 2 - Dispersion/Separation: keep far enough from flockmates */
-	for (g = 0; g < N_GROUPS; g++)
-	{
-		if (g != group_id)
-		{
-			if (pow(rel_avg_loc[g][0] - rel_avg_loc[group_id][0], 2) + pow(rel_avg_loc[g][1] - rel_avg_loc[group_id][1], 2) <
+
+
+	for (i=0;i<FLOCK_SIZE;i++){
+		if(i==robot_id) continue;
+		if (pow(relative_pos[group_id][i][0], 2) + pow(relative_pos[group_id][i][1], 2) <
 				RULE2_THRESHOLD)
-			{
+				{
 				for (j = 0; j < 2; j++)
 				{
-					dispersion[j] -= 1 / (rel_avg_loc[group_id][j] - rel_avg_loc[g][j]); // Relative distance to k
+					dispersion[j] -= 1 / relative_pos[group_id][i][j]; // Relative distance to k
 				}
 			}
-		}
-	}
+ 	}
+
+
 
 	/* Rule 3 - Consistency/Alignment: match the speeds of flockmates */
 	for (j = 0; j < 2; j++)
@@ -361,7 +435,7 @@ int main()
 		max_sens = 0;
 
 		/* Braitenberg */
-		for (i = 0; i < NB_SENSORS; i++)
+		/*for (i = 0; i < NB_SENSORS; i++)
 		{
 			distances[i] = wb_distance_sensor_get_value(ds[i]);			  //Read sensor values
 			sum_sensors += distances[i];								  // Add up sensor values
@@ -371,12 +445,13 @@ int main()
 			bmsr += e_puck_matrix[i] * distances[i];
 			bmsl += e_puck_matrix[i + NB_SENSORS] * distances[i];
 		}
-
+    printf("Robot ID %d maxsens %d\n", robot_id, max_sens);
 		// Adapt Braitenberg values (empirical tests)
 		bmsl /= MIN_SENS;
-		bmsr /= MIN_SENS;
+		bmsr /= MIN_SENS;*/
 
-		/* Send and get information */
+
+			/* Send and get information */
 		send_ping(); // sending a ping to other robot, so they can measure their distance to this robot
 
 		/// Compute self position
@@ -390,28 +465,52 @@ int main()
 		speed[group_id][robot_id][0] = (1 / DELTA_T) * (my_position[0] - prev_my_position[0]);
 		speed[group_id][robot_id][1] = (1 / DELTA_T) * (my_position[1] - prev_my_position[1]);
 
-		// Reynold's rules with all previous info (updates the speed[][] table)
+
+    //different approach, two states, reynolds and potential field
+    for (i = 0; i < NUM_SENS_POTENTIAL; i++){
+			distances[i] = wb_distance_sensor_get_value(ds[front_sensors[i]]);								  // Add up sensor values
+			max_sens = max_sens > distances[i] ? max_sens : distances[i]; // Check if new highest sensor value
+		}
+	  //if (max_sens>OBS_RANGE){
+      potential_field();
+		//	msl=potential_left;
+		//	msr=potential_right;
+		 //printf("robot id %d %s %d\n", robot_id, "potential field", max_sens);
+	 //}else{
+		  // Reynold's rules with all previous info (updates the speed[][] table)
 		reynolds_rules();
+		compute_wheel_speeds(&msl, &msr);
+		//}
+
+
 
 		// Compute wheels speed from reynold's speed
-		compute_wheel_speeds(&msl, &msr);
 
 		// Adapt speed instinct to distance sensor values
-		if (sum_sensors > NB_SENSORS * MIN_SENS)
-		{
-			msl -= msl * max_sens / (2 * MAX_SENS);
-			msr -= msr * max_sens / (2 * MAX_SENS);
-		}
+		//if (sum_sensors > NB_SENSORS * MIN_SENS)
+	//	{
+	//		msl -= msl * max_sens / (2 * MAX_SENS);
+	//		msr -= msr * max_sens / (2 * MAX_SENS);
+		//}
+		//msl -= w_difference/2 ;
+		//msr += w_difference/2 ;
 
+		if(max_sens>OBS_RANGE){
+			msl = (((float)(log10(max_sens-OBS_RANGE)))/log10(max_sens))*potential_left+(1-((float)(log10(max_sens-OBS_RANGE))/log(max_sens)))*msl ;
+			msr = (((float)(log10(max_sens-OBS_RANGE)))/log10(max_sens))*potential_right+(1-((float)(log10(max_sens-OBS_RANGE))/log10(max_sens)))*msr;
+	  }
+
+		//printf("robot id %d %s %d %d %f\n", robot_id, "potential field", msl,msr,w_difference);
+		//msr += bmsr ;
 		// Add Braitenberg
-		msl += bmsl ;
-		msr += bmsr ;
-		//limit(&msl, 999);
-		//limit(&msr, 999);
+		//msl += bmsl ;
+		//msr += bmsr ;
+		limit(&msl, 999);
+		limit(&msr, 999);
 		// Set speed
 		msl_w = msl * MAX_SPEED_WEB / 1000;
 		msr_w = msr * MAX_SPEED_WEB / 1000;
-		wb_motor_set_velocity(left_motor, msl_w);
+	  wb_motor_set_velocity(left_motor, msl_w);
 		wb_motor_set_velocity(right_motor, msr_w);
 
 		// Continue one step
