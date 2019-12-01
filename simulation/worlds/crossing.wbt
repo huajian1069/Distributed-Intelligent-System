@@ -223,25 +223,90 @@ DEF long_rock_11 Solid {
   }
 }
 DEF SUPERVISOR Robot {
+  translation 0.1 0 0.1
   children [
-    DEF emitter Emitter {
-      channel 1
+    DEF emitter0 Emitter {
+      name "emitter0"
     }
-  ]
-  name "super0"
-  controller "performance_estimation_crossing"
-  controllerArgs "-1.9 0 0"
-  supervisor TRUE
-}
-DEF SUPERVISOR Robot {
-  children [
-    DEF emitter Emitter {
+    DEF emitter1 Emitter {
+      name "emitter1"
       channel 2
     }
+    DEF emitter2 Emitter {
+      name "emitter2"
+      channel 4
+    }
+    DEF emitter3 Emitter {
+      name "emitter3"
+      channel 6
+    }
+    DEF emitter4 Emitter {
+      name "emitter4"
+      channel 8
+    }
+    DEF emitter5 Emitter {
+      name "emitter5"
+      channel 10
+    }
+    DEF emitter6 Emitter {
+      name "emitter6"
+      channel 12
+    }
+    DEF emitter7 Emitter {
+      name "emitter7"
+      channel 14
+    }
+    DEF emitter8 Emitter {
+      name "emitter8"
+      channel 16
+    }
+    DEF emitter9 Emitter {
+      name "emitter9"
+      channel 18
+    }
+    DEF receiver0 Receiver {
+      name "receiver0"
+      channel 1
+    }
+    DEF receiver1 Receiver {
+      name "receiver1"
+      channel 3
+    }
+    DEF receiver2 Receiver {
+      name "receiver2"
+      channel 5
+    }
+    DEF receiver3 Receiver {
+      name "receiver3"
+      channel 7
+    }
+    DEF receiver4 Receiver {
+      name "receiver4"
+      channel 9
+    }
+    DEF receiver5 Receiver {
+      name "receiver5"
+      channel 11
+    }
+    DEF receiver6 Receiver {
+      name "receiver6"
+      channel 13
+    }
+    DEF receiver7 Receiver {
+      name "receiver7"
+      channel 15
+    }
+    DEF receiver8 Receiver {
+      name "receiver8"
+      channel 17
+    }
+    DEF receiver9 Receiver {
+      name "receiver9"
+      channel 19
+    }
   ]
-  name "super1"
-  controller "performance_estimation_crossing"
-  controllerArgs "-0.1 0 0"
+  name "pso_supervisor"
+  controller "pso_obs_sup"
   supervisor TRUE
 }
 DEF epuck_0_0 E-puck {
@@ -249,6 +314,15 @@ DEF epuck_0_0 E-puck {
   rotation -0.001435789924665121 0.999997947530817 0.0014294899249956776 1.5529903061004253
   name "epuck_0_0"
   controller "reynolds2"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+    }
+    Emitter {
+      name "emitter_super"
+      channel 1
+    }
+  ]
   groundSensorsSlot [
     Receiver {
       name "receiver2"
@@ -268,6 +342,16 @@ DEF epuck_0_1 E-puck {
   rotation 2.813831188179924e-05 0.9999994222638666 0.0010745604537483143 1.6231596938995747
   name "epuck_0_1"
   controller "reynolds2"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 2
+    }
+    Emitter {
+      name "emitter_super"
+      channel 3
+    }
+  ]
   groundSensorsSlot [
     Receiver {
       name "receiver2"
@@ -287,6 +371,16 @@ DEF epuck_0_2 E-puck {
   rotation 3.3482782293014157e-06 0.9999999999887783 3.3514552407187395e-06 1.5700000000111827
   name "epuck_0_2"
   controller "reynolds2"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 4
+    }
+    Emitter {
+      name "emitter_super"
+      channel 5
+    }
+  ]
   groundSensorsSlot [
     Receiver {
       name "receiver2"
@@ -306,6 +400,16 @@ DEF epuck_0_3 E-puck {
   rotation 6.508419902891538e-05 0.9999999961874556 -5.821628475170652e-05 1.5700000007288126
   name "epuck_0_3"
   controller "reynolds2"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 6
+    }
+    Emitter {
+      name "emitter_super"
+      channel 7
+    }
+  ]
   groundSensorsSlot [
     Receiver {
       name "receiver2"
@@ -325,6 +429,16 @@ DEF epuck_0_4 E-puck {
   rotation 3.348278225961163e-06 0.9999999999887783 3.3514552417168492e-06 1.57
   name "epuck_0_4"
   controller "reynolds2"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 8
+    }
+    Emitter {
+      name "emitter_super"
+      channel 9
+    }
+  ]
   groundSensorsSlot [
     Receiver {
       name "receiver2"
@@ -344,6 +458,16 @@ DEF epuck_1_0 E-puck {
   rotation 3.3483766935809422e-06 0.9999999999887783 -3.3513568548269856e-06 -1.57
   name "epuck_1_0"
   controller "reynolds2"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 10
+    }
+    Emitter {
+      name "emitter_super"
+      channel 11
+    }
+  ]
   groundSensorsSlot [
     Receiver {
       name "receiver2"
@@ -363,6 +487,16 @@ DEF epuck_1_1 E-puck {
   rotation 3.3482782314255596e-06 0.9999999999887783 -3.3514552389938217e-06 -1.57
   name "epuck_1_1"
   controller "reynolds2"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 12
+    }
+    Emitter {
+      name "emitter_super"
+      channel 13
+    }
+  ]
   groundSensorsSlot [
     Receiver {
       name "receiver2"
@@ -382,6 +516,16 @@ DEF epuck_1_2 E-puck {
   rotation 3.3483766913676303e-06 0.9999999999887783 -3.3513568607031322e-06 -1.57
   name "epuck_1_2"
   controller "reynolds2"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 14
+    }
+    Emitter {
+      name "emitter_super"
+      channel 15
+    }
+  ]
   groundSensorsSlot [
     Receiver {
       name "receiver2"
@@ -401,6 +545,16 @@ DEF epuck_1_3 E-puck {
   rotation 3.348376693822369e-06 0.9999999999887783 -3.351356855870785e-06 -1.57
   name "epuck_1_3"
   controller "reynolds2"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 16
+    }
+    Emitter {
+      name "emitter_super"
+      channel 17
+    }
+  ]
   groundSensorsSlot [
     Receiver {
       name "receiver2"
@@ -420,6 +574,16 @@ DEF epuck_1_4 E-puck {
   rotation 3.3483766888391366e-06 0.9999999999887783 -3.3513568624832118e-06 -1.57
   name "epuck_1_4"
   controller "reynolds2"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 18
+    }
+    Emitter {
+      name "emitter_super"
+      channel 19
+    }
+  ]
   groundSensorsSlot [
     Receiver {
       name "receiver2"

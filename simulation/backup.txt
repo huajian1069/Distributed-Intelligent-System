@@ -1,0 +1,23 @@
+// Returns robots position in 2D (x, y, theta)
+void get_robot_position(double[] position, WbNodeRef* robot) {
+  double* translation;
+  double* rotation;
+
+  translation = wb_supervisor_field_get_sf_vec3f(wb_supervisor_node_get_field(robs[i], "translation"));
+  rotation = wb_supervisor_field_get_sf_rotation(wb_supervisor_node_get_field(robs[i], "rotation"));
+
+  position[0] = translation[0];
+  position[1] = translation[2];
+  position[2] = rotation[3];
+}
+
+// Returns distance between two robots
+double get_robot_distance(WbNodeRef* robot1, WbNodeRef* robot2) {
+  double position1[3];
+  double position1[3];
+
+  get_robot_position(position1, robot1);
+  get_robot_position(position2, robot2);
+
+  return sqrt(pow(position1[0] - position2[0], 2) + pow(position1[1] - position2[1], 2));
+}
