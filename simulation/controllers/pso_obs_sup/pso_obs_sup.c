@@ -218,7 +218,12 @@ void fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int neighbors
 /* Get distance between robots */
 double robdist(int i, int j)
 {
-  return sqrt(pow(loc[i][0] - loc[j][0], 2) + pow(loc[i][2] - loc[j][2], 2));
+  const double* trans_i;
+  const double* trans_j;
+  trans_i = wb_supervisor_field_get_sf_vec3f(wb_supervisor_node_get_field(robs[i], "translation"));
+  trans_j = wb_supervisor_field_get_sf_vec3f(wb_supervisor_node_get_field(robs[j], "translation"));
+
+  return sqrt(pow(trans_i[0] - trans_j[0], 2) + pow(trans_i[2] - trans_j[2], 2));
 }
 
 /* Choose n random neighbors */

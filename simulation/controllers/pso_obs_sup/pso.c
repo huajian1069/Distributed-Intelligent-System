@@ -35,7 +35,7 @@ int swarmsize;
 int datasize;
 int robots;
 int nb;
-char label[20];
+char label[30];
 
 /* Particle swarm optimization function                                      */
 /*                                                                           */

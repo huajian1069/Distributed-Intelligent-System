@@ -31,7 +31,7 @@
 #define FIT_ITS 180 // Number of fitness steps to run during optimization
 
 #define FINALRUNS 10
-#define NEIGHBORHOOD STANDARD
+#define NEIGHBORHOOD FIXEDRAD_NB
 #define RADIUS 0.8
 
 

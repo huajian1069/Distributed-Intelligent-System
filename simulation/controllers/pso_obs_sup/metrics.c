@@ -1,6 +1,7 @@
 #include "metrics.h"
 
 #include <stdio.h>
+#include <math.h>
 
 #define DIMENSION 2
 
