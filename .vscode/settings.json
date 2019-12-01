@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "ircom.h": "c",
+        "e_motors.h": "c"
+    }
+}
