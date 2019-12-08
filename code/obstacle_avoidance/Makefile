@@ -46,12 +46,12 @@ CC       = pic30-elf-gcc
 LD	 = pic30-elf-ld
 
 #  common options
-DEPCFLAGS = -Wall -I. -I$(EPUCKLIBROOT)/std_microchip/support/h -I$(EPUCKLIBROOT)/std_microchip/include -I$(EPUCKLIBROOT) -I$(EPUCKLIBROOT)/std_microchip/support/h 
-CFLAGS   = $(DEPCFLAGS) -mcpu=30F6014A
+DEPCFLAGS = -Wall -I. -I$(EPUCKLIBROOT)/std_microchip/support/h -I$(EPUCKLIBROOT)/std_microchip/include -I$(EPUCKLIBROOT) -I$(EPUCKLIBROOT)/std_microchip/support/h
+CFLAGS   = $(DEPCFLAGS) -mcpu=30F6014A -DROBOT_ID=$(ROBOT_ID)
 
 LDFLAGS  = -L$(EPUCKLIBROOT)/std_microchip/lib --defsym=__ICD2RAM=1 --script=$(EPUCKLIBROOT)/std_microchip/support/gld/p30f6014a.gld -mpic30_elf32
-LDLIBS   = -lpic30-elf -lm-elf -lc-elf 
-#LDLIBS   = -lpic30-coff -lm-coff -lc-coff 
+LDLIBS   = -lpic30-elf -lm-elf -lc-elf
+#LDLIBS   = -lpic30-coff -lm-coff -lc-coff
 #LDLIBS   = --start-group -lpic30-coff -lm-coff -lc-coff --end-group
 #LDLIBS   = --start-group -lpic30-elf -lm-elf -lc-elf --end-group
 
@@ -85,7 +85,7 @@ all: $(PROG).hex tags $(DEPS)
 # Clean up directory
 # ------------------------------------------------------------------------------
 .PHONY:	clean
-clean:	
+clean:
 	- $(RM) $(OBJS) *~ core.* *.rpo $(PROG).cof $(PROG).hex
 
 .PHONY: distclean

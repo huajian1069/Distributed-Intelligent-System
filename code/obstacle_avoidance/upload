@@ -1,0 +1,8 @@
+rid=0
+for i in 71 90
+do
+   make clean
+   ROBOT_ID=$rid make all
+   epuckupload -f test.hex $i
+   rid=$((rid+1))
+done

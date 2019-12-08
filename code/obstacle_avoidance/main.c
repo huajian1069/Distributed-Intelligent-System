@@ -63,11 +63,17 @@
 #define OBS_GAIN 200
 #define NUM_SENS_POTENTIAL 6
 
+#ifndef  ROBOT_ID
+#define  ROBOT_ID 0
+#endif
+
+
 int e_puck_matrix[16] = {47, 59, 64, 50, 38, -48, -66, -86, -82, -68, -46, 38, 50, 66, 58, 48}; // for obstacle avoidance
 int front_sensors[NUM_SENS_POTENTIAL] = {0, 1, 2, 5, 6, 7};
 float sensor_vectors[NUM_SENS_POTENTIAL][2] = {{0.351441063, -0.936197964}, {0.865973584, -0.500089743}, {1, 0}, {-1, 0}, {-0.865973584, -0.500089743}, {-0.351441063, -0.936197964}};
 
-int group_id, robot_id; // Unique and normalized (between 0 and FLOCK_SIZE-1) robot ID
+int group_id;
+int robot_id=ROBOT_ID; // Unique and normalized (between 0 and FLOCK_SIZE-1) robot ID
 
 float relative_pos[N_GROUPS][FLOCK_SIZE][3];	  // relative X, Z, Theta of all robots
 float prev_relative_pos[N_GROUPS][FLOCK_SIZE][3]; // Previous relative  X, Z, Theta values
@@ -100,7 +106,7 @@ static void reset()
 
 	e_start_agendas_processing();
 
-    e_calibrate_ir(); 
+    e_calibrate_ir();
 
 	ircomStart();
 	ircomEnableContinuousListening();
@@ -339,16 +345,8 @@ void reynolds_rules()
 */
 void send_ping(void)
 {
-	char out[20];
-	int i;
-
-	sprintf(out, "%d,%d,%.3f,%.3f", group_id, robot_id, my_position[0], my_position[1]);
-	for (i = 0; i < strlen(out) + 1; i++)
-	{
-		ircomSend(out[i]);
-		while (ircomSendDone() == 0)
-			;
-	}
+	ircomSend(ROBOT_ID);
+	while (ircomSendDone() == 0);
 }
 
 /*
@@ -357,31 +355,44 @@ void send_ping(void)
 */
 void process_received_ping_messages(void)
 {
-	const double *message_direction;
+	float message_direction;
 	double message_rssi; // Received Signal Strength indicator
 	double theta;
 	double range;
 	char *inbuffer; // Buffer for the receiver node
 	int other_robot_id, other_group_id;
 	float other_x, other_y;
+	double
 
 	IrcomMessage imsg;
-
-	if (imsg.error == 0)
-	{
-		e_set_led(1, 2);
-		int val = (int)imsg.value;
-	}
-
 	ircomPopMessage(&imsg);
-	while (imsg.error == 0)
+	if(imsg.error == 0)
 	{
-		// imsg.value
-		theta = imsg.direction;
-		range = imsg.distance;
 
-		ircomPopMessage(&imsg);
+		// imsg.value
+		message_direction = imsg.direction;
+		message_rssi = imsg.distance;
+		theta = imsg.direction; // find the relative theta;
+		range = imsg.distance;
+		other_robot_id = (int)imsg.value;
+		other_group_id=group_id;
+
+
+
+		prev_relative_pos[other_group_id][other_robot_id][0] = relative_pos[other_group_id][other_robot_id][0];
+		prev_relative_pos[other_group_id][other_robot_id][1] = relative_pos[other_group_id][other_robot_id][1];
+
+		relative_pos[other_group_id][other_robot_id][0] = range * cos(theta);		 // relative x pos
+		relative_pos[other_group_id][other_robot_id][1] = -1.0 * range * sin(theta); // relative y pos
+
+		relative_speed[other_group_id][other_robot_id][0] = relative_speed[other_group_id][other_robot_id][0] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][0] - prev_relative_pos[other_group_id][other_robot_id][0]);
+		relative_speed[other_group_id][other_robot_id][1] = relative_speed[other_group_id][other_robot_id][1] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][1] - prev_relative_pos[other_group_id][other_robot_id][1]);
+
+		//sprintf(buffer, "received by %d from %d and direction is %f\r\n", robot_id, other_robot_id, message_direction);
+	  //e_send_uart1_char(buffer, strlen(buffer));
+		//ircomPopMessage(&imsg);
 	}
+
 }
 
 // the main function
@@ -414,6 +425,7 @@ int main()
 		/* Send and get information */
 		send_ping(); // sending a ping to other robot, so they can measure their distance to this robot
 
+
 		/// Compute self position
 		prev_my_position[0] = my_position[0];
 		prev_my_position[1] = my_position[1];
@@ -421,6 +433,8 @@ int main()
 		update_self_motion(msl, msr);
 
 		process_received_ping_messages();
+		//sprintf(buffer, "sent \r\n");
+		//e_send_uart1_char(buffer, strlen(buffer));
 
 		speed[group_id][robot_id][0] = (1 / DELTA_T) * (my_position[0] - prev_my_position[0]);
 		speed[group_id][robot_id][1] = (1 / DELTA_T) * (my_position[1] - prev_my_position[1]);
@@ -451,11 +465,13 @@ int main()
 		// Set speed
 		msl_w = msl * MAX_SPEED_WEB / 1000;
 		msr_w = msr * MAX_SPEED_WEB / 1000;
-		e_set_speed_left((int)(msl_w * 100));
-		e_set_speed_right((int)(msr_w * 100));
+		//e_set_speed_left((int)(msl_w * 100));
+	//	e_set_speed_right((int)(msr_w * 100));
+		e_set_speed_left((int)(0));
+		e_set_speed_right((int)(0));
 
-		// sprintf(buffer, "Rule-based %f %f\r\n", msl_w, msr_w);
-		// e_send_uart1_char(buffer, strlen(buffer));
+	//	sprintf(buffer, "Robot_id %d\r\n", robot_id);
+	//	e_send_uart1_char(buffer, strlen(buffer));
 
 		// Continue one step
 		wait(100000);
