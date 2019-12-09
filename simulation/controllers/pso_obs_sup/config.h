@@ -3,7 +3,7 @@
 
 #define FLOCK_SIZE	5 
 #define WEBOTS_MAX_VELOCITY 6.28
-#define ROBOTS 10
+#define ROBOTS 5
 #define MAX_ROB ROBOTS
 
 #define DATASIZE 10
@@ -17,8 +17,8 @@
 #define LWEIGHT 2.0   // Weight of attraction to personal best
 #define NBWEIGHT 2.0  // Weight of attraction to neighborhood best
 #define VMAX 40.0     // Maximum velocity particle can attain
-#define MININIT -20.0 // Lower bound on initialization value
-#define MAXINIT 20.0  // Upper bound on initialization value
+#define MININIT 0.0 // Lower bound on initialization value
+#define MAXINIT 1.0  // Upper bound on initialization value
 #define ITS 20        // Number of iterations to run
 
 /* Neighborhood types */
@@ -28,7 +28,7 @@
 #define FIXEDRAD_NB 2
 
 /* Fitness definitions */
-#define FIT_ITS 180 // Number of fitness steps to run during optimization
+#define FIT_ITS 600 // Number of fitness steps to run during optimization
 
 #define FINALRUNS 10
 #define NEIGHBORHOOD FIXEDRAD_NB

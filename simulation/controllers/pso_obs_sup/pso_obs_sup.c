@@ -28,6 +28,7 @@ void reset(void)
 {
   int i;
 
+  
   for (i = 0; i < ROBOTS; i++)
   {
     char robot_name[15];
@@ -52,6 +53,7 @@ void reset(void)
   }
 
   metrics_init(robs);
+  
 }
 
 /* MAIN - Distribute and test conctrollers */
@@ -182,9 +184,9 @@ void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its,
   for (i = 0; i < numRobs; i++)
   {
     rbuffer = (double *)wb_receiver_get_data(rec[i]);
-    fit[i] = rbuffer[0] * (1/metrics_get_performance());
+    fit[i] = -metrics_get_performance();
 
-    printf("Fitness: %f * (1/%f) = %f\n", rbuffer[0], metrics_get_performance(), fit[i]);
+    printf("Fitness: %f\n", metrics_get_performance());
 
     wb_receiver_next_packet(rec[i]);
   }

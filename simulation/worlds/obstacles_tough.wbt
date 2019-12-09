@@ -8,8 +8,8 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation -0.9947382165097678 0.07380129547357459 0.0710580706281044 0.9290732917356436
-  position -0.7421235078526066 3.4811245498563834 2.761662500007355
+  orientation -0.955798621493191 0.22925925412863207 0.18409016689682037 1.2311356449036441
+  position 0.4300478101225653 8.994992223954313 3.6008555910721407
 }
 PointLight {
   intensity 0.5
@@ -79,6 +79,7 @@ DEF ground Solid {
 DEF long_rock_3 Solid {
   translation -3 0 0
   rotation 0 1 0 1.5708
+  scale 7 7 7
   children [
     Shape {
       appearance Appearance {
@@ -97,6 +98,136 @@ DEF long_rock_3 Solid {
     }
   ]
   name "short brick"
+  boundingObject DEF U_END_BOX Box {
+    size 0.6 0.2 0.01
+  }
+}
+DEF long_rock_3 Solid {
+  translation 3.0961309999999997 0 0.038613999999999996
+  rotation 0 1 0 1.5708
+  scale 7 7 7
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 1 1 1
+        }
+        texture ImageTexture {
+          url [
+            "textures/stone-2.png"
+          ]
+        }
+      }
+      geometry Box {
+        size 0.6 0.2 0.01
+      }
+    }
+  ]
+  name "short brick(16)"
+  boundingObject DEF U_END_BOX Box {
+    size 0.6 0.2 0.01
+  }
+}
+DEF long_rock_3 Solid {
+  translation -0.988896 0 -2.0013579999999997
+  rotation 0 -1 0 -3.3071795861872033e-06
+  scale 7 7 7
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 1 1 1
+        }
+        texture ImageTexture {
+          url [
+            "textures/stone-2.png"
+          ]
+        }
+      }
+      geometry Box {
+        size 0.6 0.2 0.01
+      }
+    }
+  ]
+  name "short brick(17)"
+  boundingObject DEF U_END_BOX Box {
+    size 0.6 0.2 0.01
+  }
+}
+DEF long_rock_3 Solid {
+  translation 1.1053899999999999 0 -2.005655
+  rotation 0 -1 0 -3.3071795861872033e-06
+  scale 7 7 7
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 1 1 1
+        }
+        texture ImageTexture {
+          url [
+            "textures/stone-2.png"
+          ]
+        }
+      }
+      geometry Box {
+        size 0.6 0.2 0.01
+      }
+    }
+  ]
+  name "short brick(18)"
+  boundingObject DEF U_END_BOX Box {
+    size 0.6 0.2 0.01
+  }
+}
+DEF long_rock_3 Solid {
+  translation -1.075852 0 1.9841289999999998
+  rotation 0 -1 0 -3.3071795861872033e-06
+  scale 7 7 7
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 1 1 1
+        }
+        texture ImageTexture {
+          url [
+            "textures/stone-2.png"
+          ]
+        }
+      }
+      geometry Box {
+        size 0.6 0.2 0.01
+      }
+    }
+  ]
+  name "short brick(19)"
+  boundingObject DEF U_END_BOX Box {
+    size 0.6 0.2 0.01
+  }
+}
+DEF long_rock_3 Solid {
+  translation 1.1226399999999999 0 1.981968
+  rotation 0 -1 0 -3.3071795861872033e-06
+  scale 7 7 7
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 1 1 1
+        }
+        texture ImageTexture {
+          url [
+            "textures/stone-2.png"
+          ]
+        }
+      }
+      geometry Box {
+        size 0.6 0.2 0.01
+      }
+    }
+  ]
+  name "short brick(20)"
   boundingObject DEF U_END_BOX Box {
     size 0.6 0.2 0.01
   }
@@ -690,30 +821,6 @@ DEF rock Solid {
   }
 }
 DEF rock Solid {
-  translation -1.95487 0 -0.686015
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.15 0.2 0.37
-      }
-    }
-  ]
-  name "short brick"
-  boundingObject DEF U_END_BOX Box {
-    size 0.15 0.2 0.37
-  }
-}
-DEF rock Solid {
   translation -1.7343 -4.39648e-14 -0.170494
   children [
     Shape {
@@ -883,78 +990,219 @@ DEF rock Solid {
     size 0.15 0.2 0.15
   }
 }
-DEF epuck0 E-puck {
+DEF epuck_0_0 E-puck {
   translation -2.9000000000000243 -3.198720128103939e-05 -1.1944571543457554e-11
   rotation 3.348376694610692e-06 0.9999999999887783 -3.351356855239216e-06 -1.5700000009872692
-  name "epuck0"
+  name "epuck_0_0"
   controller "obstacle_avoidance"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+    }
+    Emitter {
+      name "emitter_super"
+      channel 1
+    }
+  ]
   groundSensorsSlot [
     Receiver {
       name "receiver2"
+      channel 50
     }
     Emitter {
       name "emitter2"
+      channel 50
     }
   ]
 }
-DEF epuck1 E-puck {
+DEF epuck_0_1 E-puck {
   translation -2.900000000000025 -3.1987201280992555e-05 0.09999999998805566
   rotation 3.3483766886268558e-06 0.9999999999887783 -3.3513568624208634e-06 -1.5700000009873452
-  name "epuck1"
+  name "epuck_0_1"
   controller "obstacle_avoidance"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 2
+    }
+    Emitter {
+      name "emitter_super"
+      channel 3
+    }
+  ]
   groundSensorsSlot [
     Emitter {
       name "emitter2"
+      channel 50
     }
     Receiver {
       name "receiver2"
+      channel 50
     }
   ]
 }
-DEF epuck2 E-puck {
+DEF epuck_0_2 E-puck {
   translation -2.900000000000024 -3.1987201281028985e-05 -0.10000000001194448
   rotation 3.348376698869329e-06 0.9999999999887783 -3.3513568471719338e-06 -1.5700000009873216
-  name "epuck2"
+  name "epuck_0_2"
   controller "obstacle_avoidance"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 4
+    }
+    Emitter {
+      name "emitter_super"
+      channel 5
+    }
+  ]
   groundSensorsSlot [
     Emitter {
       name "emitter2"
+      channel 50
     }
     Receiver {
       name "receiver2"
+      channel 50
     }
   ]
 }
-DEF epuck3 E-puck {
+DEF epuck_0_3 E-puck {
   translation -2.900000000000024 -3.198720128094919e-05 0.2138919999880553
   rotation 3.348376684048705e-06 0.9999999999887783 -3.3513568674861416e-06 -1.5700000009872743
-  name "epuck3"
+  name "epuck_0_3"
   controller "obstacle_avoidance"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 6
+    }
+    Emitter {
+      name "emitter_super"
+      channel 7
+    }
+  ]
   groundSensorsSlot [
     Emitter {
       name "emitter2"
+      channel 50
     }
     Receiver {
       name "receiver2"
+      channel 50
     }
   ]
 }
-DEF epuck4 E-puck {
+DEF epuck_0_4 E-puck {
   translation -2.900000000000025 -3.1987201281048067e-05 -0.20000000001194462
   rotation 3.3483766784811417e-06 0.9999999999887783 -3.3513568687696764e-06 -1.5700000009872994
-  name "epuck4"
+  name "epuck_0_4"
   controller "obstacle_avoidance"
+  turretSlot [
+    Receiver {
+      name "receiver_super"
+      channel 8
+    }
+    Emitter {
+      name "emitter_super"
+      channel 9
+    }
+  ]
   groundSensorsSlot [
     Emitter {
       name "emitter2"
+      channel 50
     }
     Receiver {
       name "receiver2"
+      channel 50
     }
   ]
 }
 DEF SUPERVISOR Robot {
-  controller "performance_estimation"
-  controllerArgs "2.3 0 0"
+  translation 0.1 0 0.1
+  children [
+    DEF emitter0 Emitter {
+      name "emitter0"
+    }
+    DEF emitter1 Emitter {
+      name "emitter1"
+      channel 2
+    }
+    DEF emitter2 Emitter {
+      name "emitter2"
+      channel 4
+    }
+    DEF emitter3 Emitter {
+      name "emitter3"
+      channel 6
+    }
+    DEF emitter4 Emitter {
+      name "emitter4"
+      channel 8
+    }
+    DEF emitter5 Emitter {
+      name "emitter5"
+      channel 10
+    }
+    DEF emitter6 Emitter {
+      name "emitter6"
+      channel 12
+    }
+    DEF emitter7 Emitter {
+      name "emitter7"
+      channel 14
+    }
+    DEF emitter8 Emitter {
+      name "emitter8"
+      channel 16
+    }
+    DEF emitter9 Emitter {
+      name "emitter9"
+      channel 18
+    }
+    DEF receiver0 Receiver {
+      name "receiver0"
+      channel 1
+    }
+    DEF receiver1 Receiver {
+      name "receiver1"
+      channel 3
+    }
+    DEF receiver2 Receiver {
+      name "receiver2"
+      channel 5
+    }
+    DEF receiver3 Receiver {
+      name "receiver3"
+      channel 7
+    }
+    DEF receiver4 Receiver {
+      name "receiver4"
+      channel 9
+    }
+    DEF receiver5 Receiver {
+      name "receiver5"
+      channel 11
+    }
+    DEF receiver6 Receiver {
+      name "receiver6"
+      channel 13
+    }
+    DEF receiver7 Receiver {
+      name "receiver7"
+      channel 15
+    }
+    DEF receiver8 Receiver {
+      name "receiver8"
+      channel 17
+    }
+    DEF receiver9 Receiver {
+      name "receiver9"
+      channel 19
+    }
+  ]
+  name "pso_supervisor"
+  controller "pso_obs_sup"
   supervisor TRUE
 }
