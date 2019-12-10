@@ -78,6 +78,28 @@ float theta_robots[N_GROUPS][FLOCK_SIZE];
 int last_timestamp[N_GROUPS][FLOCK_SIZE];
 
 
+void reinitialize_states() {
+	for (int i = 0; i < 3; i++) {
+		my_position[i] = 0;
+		prev_my_position[i] = 0;
+	}
+
+	for (int i = 0; i < N_GROUPS; i++) {
+		for (int j = 0; j < FLOCK_SIZE; j++) {
+			relative_pos[i][j][0] = 0;
+			relative_pos[i][j][1] = 0;
+			relative_pos[i][j][2] = 0;
+			prev_relative_pos[i][j][0] = 0;
+			prev_relative_pos[i][j][1] = 0;
+			prev_relative_pos[i][j][2] = 0;
+			relative_speed[i][j][0] = 0;
+			relative_speed[i][j][1] = 0;
+			speed[i][j][0] = 0;
+			speed[i][j][1] = 0;
+		}
+	}
+}
+
 /*
  * Reset the robot's devices and get its ID
  */
@@ -445,8 +467,8 @@ int main()
 		if (optim_state == OPTIM_CHANGE_CONFIG) {
 			// printf("Change config %d %d...\n", optim_config.n_params, optim_config.n_iters);
 			for (int k = 0; k < 8; k++) {
-				e_puck_matrix[0] = optim_config.params[k];
-				e_puck_matrix[15-k] = optim_config.params[k];
+				//e_puck_matrix[0] = optim_config.params[k];
+				//e_puck_matrix[15-k] = optim_config.params[k];
 			}
 		}
 		if (optim_state == OPTIM_SEND_STATS) {
