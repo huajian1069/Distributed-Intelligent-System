@@ -26,6 +26,8 @@
 #include <ircom/ircom.h>
 #include <btcom/btcom.h>
 
+#include <time.h>
+
 #ifndef M_PI
 #define M_PI 3.14
 #endif
@@ -35,8 +37,8 @@
 #define MAX_SENS 4096	  // Maximum sensibility value
 #define MAX_SPEED 800	  // Maximum speed
 #define MAX_SPEED_WEB 6.28 // Maximum speed webots
-#define FLOCK_SIZE 5	   // Size of flock
-#define N_GROUPS 2
+#define FLOCK_SIZE 2	   // Size of flock
+#define N_GROUPS 1
 #define TIME_STEP 64 // [ms] Length of time step
 
 #define AXLE_LENGTH 0.052		// Distance between wheels of robot (meters)
@@ -44,10 +46,10 @@
 #define WHEEL_RADIUS 0.0205		// Wheel radius (meters)
 #define DELTA_T 0.064			// Timestep (seconds)
 
-#define RULE1_THRESHOLD 0.10	// Threshold to activate aggregation rule. default 0.20
+#define RULE1_THRESHOLD 10	// Threshold to activate aggregation rule. default 0.20
 #define RULE1_WEIGHT (2.0 / 10) // Weight of aggregation rule. default 0.6/10
 
-#define RULE2_THRESHOLD 0.3		 // Threshold to activate dispersion rule. default 0.15
+#define RULE2_THRESHOLD 7		 // Threshold to activate dispersion rule. default 0.15
 #define RULE2_WEIGHT (0.02 / 10) // Weight of dispersion rule. default 0.02/10
 
 #define RULE3_WEIGHT (1.0 / 10) // Weight of consistency rule. default 1.0/10
@@ -77,18 +79,19 @@ int robot_id=ROBOT_ID; // Unique and normalized (between 0 and FLOCK_SIZE-1) rob
 
 float relative_pos[N_GROUPS][FLOCK_SIZE][3];	  // relative X, Z, Theta of all robots
 float prev_relative_pos[N_GROUPS][FLOCK_SIZE][3]; // Previous relative  X, Z, Theta values
-float absolute_pos[N_GROUPS][FLOCK_SIZE][2];
 float my_position[3];						   // X, Z, Theta of the current robot
 float prev_my_position[3];					   // X, Z, Theta of the current robot in the previous time step
 float speed[N_GROUPS][FLOCK_SIZE][2];		   // Speeds calculated with Reynold's rules
 float relative_speed[N_GROUPS][FLOCK_SIZE][2]; // Speeds calculated with Reynold's rules
-float migr[2] = {0, -4};					   // Migration vector
+float migr[2] = {0, -0.5};					   // Migration vector
 char *robot_name;
 float theta_robots[N_GROUPS][FLOCK_SIZE];
 int potential_left;
 int potential_right;
 float w_difference;
 char buffer[80];
+long epoch = 0;
+time_t time_ptr;
 
 void wait(unsigned long num) {
 	while (num > 0) {num--;}
@@ -260,7 +263,6 @@ void reynolds_rules()
 		{
 			rel_avg_loc[g][j] = 0;
 			rel_avg_speed[g][j] = 0;
-			abs_avg_loc[g][j] = 0;
 		}
 	}
 
@@ -273,7 +275,6 @@ void reynolds_rules()
 			{
 				rel_avg_speed[g][j] += relative_speed[g][i][j];
 				rel_avg_loc[g][j] += relative_pos[g][i][j];
-				abs_avg_loc[g][j] += absolute_pos[g][i][j];
 			}
 		}
 	}
@@ -284,14 +285,15 @@ void reynolds_rules()
 		{
 			rel_avg_speed[g][j] /= FLOCK_SIZE - 1;
 			rel_avg_loc[g][j] /= FLOCK_SIZE - 1;
-			abs_avg_loc[g][j] /= FLOCK_SIZE;
 		}
 	}
 
 	/* Rule 1 - Aggregation/Cohesion: move towards the center of mass */
-	for (j = 0; j < 2; j++)
-	{
-		cohesion[j] = rel_avg_loc[group_id][j];
+	if (sqrt(pow(relative_avg_pos[group_id][j], 2) + pow(relative_avg_pos[group_id][j], 2)) >
+			RULE1_THRESHOLD) {
+	    for (j = 0; j < 2; j++){
+				cohesion[j] = rel_avg_loc[group_id][j];
+			}
 	}
 
 	/* Rule 2 - Dispersion/Separation: keep far enough from flockmates */
@@ -300,7 +302,7 @@ void reynolds_rules()
 	{
 		if (i == robot_id)
 			continue;
-		if (pow(relative_pos[group_id][i][0], 2) + pow(relative_pos[group_id][i][1], 2) <
+		if (sqrt(pow(relative_pos[group_id][i][0], 2) + pow(relative_pos[group_id][i][1], 2)) <
 			RULE2_THRESHOLD)
 		{
 			for (j = 0; j < 2; j++)
@@ -333,10 +335,14 @@ void reynolds_rules()
 	}
 	else
 	{
-		speed[group_id][robot_id][0] += MIGRATION_WEIGHT * (migr[0] - abs_avg_loc[group_id][0]);
-		speed[group_id][robot_id][1] -= MIGRATION_WEIGHT * (migr[1] - abs_avg_loc[group_id][1]); //y axis of webots is inverted
+		speed[group_id][robot_id][0] += MIGRATION_WEIGHT * (migr[0] - my_position[0]);
+		speed[group_id][robot_id][1] -= MIGRATION_WEIGHT * (migr[1] - my_position[1]); //y axis of webots is inverted
 	}
+	sprintf(buffer, "abs x is %f abs y is %f\r\n",my_position[0], my_position[1]);
+	e_send_uart1_char(buffer, strlen(buffer));
 }
+
+
 
 /*
  *  each robot sends a ping message, so the other robots can measure relative range and bearing to the sender.
@@ -362,7 +368,6 @@ void process_received_ping_messages(void)
 	char *inbuffer; // Buffer for the receiver node
 	int other_robot_id, other_group_id;
 	float other_x, other_y;
-	double
 
 	IrcomMessage imsg;
 	ircomPopMessage(&imsg);
@@ -388,11 +393,28 @@ void process_received_ping_messages(void)
 		relative_speed[other_group_id][other_robot_id][0] = relative_speed[other_group_id][other_robot_id][0] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][0] - prev_relative_pos[other_group_id][other_robot_id][0]);
 		relative_speed[other_group_id][other_robot_id][1] = relative_speed[other_group_id][other_robot_id][1] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][1] - prev_relative_pos[other_group_id][other_robot_id][1]);
 
-		//sprintf(buffer, "received by %d from %d and direction is %f\r\n", robot_id, other_robot_id, message_direction);
+		//sprintf(buffer, "from %d and relative pos x is %f relative pos y is %f\r\n", other_robot_id, 	relative_pos[other_group_id][other_robot_id][0], relative_pos[other_group_id][other_robot_id][1]);
 	  //e_send_uart1_char(buffer, strlen(buffer));
-		//ircomPopMessage(&imsg);
 	}
 
+}
+
+void InitTMR5(void)
+{
+  T5CON = 0;                    //
+  T5CONbits.TCKPS=3;            // prescsaler = 256
+  TMR5 = 0;                     // clear timer 5
+  PR5 = (500.0*MILLISEC)/256.0; // interrupt every 500ms with 256 prescaler
+  IFS1bits.T5IF = 0;            // clear interrupt flag
+  IEC1bits.T5IE = 1;            // set interrupt enable bit
+  T5CONbits.TON = 1;            // start Timer5
+
+}
+
+void _ISRFAST _T5Interrupt(void)
+{
+  IFS1bits.T5IF = 0;            // clear interrupt flag
+	epoch++;
 }
 
 // the main function
@@ -407,6 +429,7 @@ int main()
 	int max_sens;				 // Store highest sensor value
 
 	reset(); // Resetting the robot
+	InitTMR5();
 
 
 	msl = 0;
@@ -424,7 +447,6 @@ int main()
 
 		/* Send and get information */
 		send_ping(); // sending a ping to other robot, so they can measure their distance to this robot
-
 
 		/// Compute self position
 		prev_my_position[0] = my_position[0];
@@ -455,7 +477,7 @@ int main()
 		// Adapt speed instinct to distance sensor values
 		if (max_sens > OBS_RANGE)
 		{
-			msl = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_left + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log(max_sens))) * msl;
+			msl = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_left + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msl;
 			msr = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_right + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msr;
 		}
 
@@ -465,12 +487,12 @@ int main()
 		// Set speed
 		msl_w = msl * MAX_SPEED_WEB / 1000;
 		msr_w = msr * MAX_SPEED_WEB / 1000;
-		//e_set_speed_left((int)(msl_w * 100));
-	//	e_set_speed_right((int)(msr_w * 100));
-		e_set_speed_left((int)(0));
-		e_set_speed_right((int)(0));
+		e_set_speed_left(msl);
+	  e_set_speed_right(msr);
+		//e_set_speed_left((int)(200));
+		//e_set_speed_right((int)(200));
 
-	//	sprintf(buffer, "Robot_id %d\r\n", robot_id);
+		//sprintf(buffer, "Time: %d\r\n", epoch);
 	//	e_send_uart1_char(buffer, strlen(buffer));
 
 		// Continue one step
