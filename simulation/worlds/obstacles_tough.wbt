@@ -6,10 +6,17 @@ WorldInfo {
     "Date: DD MMM YYYY"
   ]
   basicTimeStep 16
+  contactProperties [
+    ContactProperties {
+      coulombFriction [
+        0.1
+      ]
+    }
+  ]
 }
 Viewpoint {
-  orientation -0.955798621493191 0.22925925412863207 0.18409016689682037 1.2311356449036441
-  position 0.4300478101225653 8.994992223954313 3.6008555910721407
+  orientation -0.8003903931483249 0.5224612872369317 0.29395479566524885 1.1246278115492296
+  position 1.3509149523076283 5.937308642725073 3.168657703810489
 }
 PointLight {
   intensity 0.5
@@ -991,8 +998,8 @@ DEF rock Solid {
   }
 }
 DEF epuck_0_0 E-puck {
-  translation -2.9000000000000243 -3.198720128103939e-05 -1.1944571543457554e-11
-  rotation 3.348376694610692e-06 0.9999999999887783 -3.351356855239216e-06 -1.5700000009872692
+  translation -2.9 0.005 -1.19446e-11
+  rotation 0 1 0 -1.5700000009872692
   name "epuck_0_0"
   controller "obstacle_avoidance"
   turretSlot [
@@ -1014,10 +1021,11 @@ DEF epuck_0_0 E-puck {
       channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_0_1 E-puck {
-  translation -2.900000000000025 -3.1987201280992555e-05 0.09999999998805566
-  rotation 3.3483766886268558e-06 0.9999999999887783 -3.3513568624208634e-06 -1.5700000009873452
+  translation -2.9 0.005 0.1
+  rotation 0 1 0 -1.5700000009873452
   name "epuck_0_1"
   controller "obstacle_avoidance"
   turretSlot [
@@ -1040,10 +1048,11 @@ DEF epuck_0_1 E-puck {
       channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_0_2 E-puck {
-  translation -2.900000000000024 -3.1987201281028985e-05 -0.10000000001194448
-  rotation 3.348376698869329e-06 0.9999999999887783 -3.3513568471719338e-06 -1.5700000009873216
+  translation -2.9 0.005 -0.1
+  rotation 0 1 0 -1.5700000009873216
   name "epuck_0_2"
   controller "obstacle_avoidance"
   turretSlot [
@@ -1066,10 +1075,11 @@ DEF epuck_0_2 E-puck {
       channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_0_3 E-puck {
-  translation -2.900000000000024 -3.198720128094919e-05 0.2138919999880553
-  rotation 3.348376684048705e-06 0.9999999999887783 -3.3513568674861416e-06 -1.5700000009872743
+  translation -2.9 0.005 0.213892
+  rotation 0 1 0 -1.5700000009872743
   name "epuck_0_3"
   controller "obstacle_avoidance"
   turretSlot [
@@ -1092,10 +1102,11 @@ DEF epuck_0_3 E-puck {
       channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_0_4 E-puck {
-  translation -2.900000000000025 -3.1987201281048067e-05 -0.20000000001194462
-  rotation 3.3483766784811417e-06 0.9999999999887783 -3.3513568687696764e-06 -1.5700000009872994
+  translation -2.9 0.005 -0.2
+  rotation 0 1 0 -1.5700000009872994
   name "epuck_0_4"
   controller "obstacle_avoidance"
   turretSlot [
@@ -1118,6 +1129,7 @@ DEF epuck_0_4 E-puck {
       channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF SUPERVISOR Robot {
   translation 0.1 0 0.1
