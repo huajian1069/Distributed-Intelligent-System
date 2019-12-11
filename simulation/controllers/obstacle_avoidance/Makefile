@@ -68,7 +68,7 @@
 ###-----------------------------------------------------------------------------
 
 ### Do not modify: this includes Webots global Makefile.include
-C_SOURCES = obstacle_avoidance_orig.c optim.c
+C_SOURCES = obstacle_avoidance.c optim.c
 
 space :=
 space +=

@@ -6,8 +6,8 @@
 #define ROBOTS 5
 #define MAX_ROB ROBOTS
 
-#define DATASIZE 10
-#define SWARMSIZE 10
+#define DATASIZE 6
+#define SWARMSIZE 6
 
 #define ROB_RAD 0.035
 #define ARENA_SIZE 0.94

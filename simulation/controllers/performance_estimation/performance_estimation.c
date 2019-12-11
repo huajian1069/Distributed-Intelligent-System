@@ -18,7 +18,7 @@
 #include <webots/emitter.h>
 #include <webots/supervisor.h>
 
-#define FLOCK_SIZE	4 		// Number of robots in flock
+#define FLOCK_SIZE	5 		// Number of robots in flock
 #define TIME_STEP	64		// [ms] Length of time step
 #define DIMENSION 2
 #define WEBOTS_MAX_VELOCITY 6.28
@@ -35,7 +35,7 @@ float loc[FLOCK_SIZE][3];		// Location of everybody in the flock
 
 
 int offset;				// Offset of robots number
-float migr[2];			// Migration vector
+float migr[2];		// Migration vector
 float orient_migr; 			// Migration orientation
 int t;
 
@@ -100,16 +100,17 @@ void compute_fitness() {
 	static float avg_pt = 0.0;
 	static float prev_avg[2] = {0, 0};
 
-	//Orientation: measure the alignment bewtween robots
-	float sumSin=0, sumCos=0;
 	float ot, ct, vt, pt; 
+
+	// Orientation: measure the alignment bewtween robots
+	float sumSin=0, sumCos=0;
 	for(i=0; i<FLOCK_SIZE; i++){
 		sumCos += cos(loc[i][2]);
 		sumSin += sin(loc[i][2]);
 	}
 	ot = sqrt( pow(sumCos, 2) + pow(sumSin, 2) ) / FLOCK_SIZE;
 
-	//Cohesion: measure the dispersion of robots,
+	// Cohesion: measure the dispersion of robots,
 	float avg[2]={0, 0};
 	for(i=0; i<FLOCK_SIZE; i++){
 		avg[0] += loc[i][0];

@@ -1,3 +1,9 @@
+# TODO
+- Find a proper PSO
+  - Homogenious, group, single particle per group of robots 
+- Apply changes
+
+
 // Returns robots position in 2D (x, y, theta)
 void get_robot_position(double[] position, WbNodeRef* robot) {
   double* translation;
@@ -21,3 +27,6 @@ double get_robot_distance(WbNodeRef* robot1, WbNodeRef* robot2) {
 
   return sqrt(pow(position1[0] - position2[0], 2) + pow(position1[1] - position2[1], 2));
 }
+
+
+

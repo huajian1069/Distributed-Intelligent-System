@@ -13,8 +13,6 @@ WbDeviceTag emitter[MAX_ROB];
 WbDeviceTag rec[MAX_ROB];
 const double *loc[MAX_ROB];
 const double *rot[MAX_ROB];
-double new_loc[MAX_ROB][3];
-double new_rot[MAX_ROB][4];
 double initial_loc[MAX_ROB][3];
 double initial_rot[MAX_ROB][4];
 
@@ -40,14 +38,14 @@ void reset(void)
 
     robs[i] = wb_supervisor_node_get_from_def(robot_name);
     loc[i] = wb_supervisor_field_get_sf_vec3f(wb_supervisor_node_get_field(robs[i], "translation"));
-    initial_loc[i][0] = new_loc[i][0] = loc[i][0];
-    initial_loc[i][1] = new_loc[i][1] = loc[i][1];
-    initial_loc[i][2] = new_loc[i][2] = loc[i][2];
+    initial_loc[i][0] = loc[i][0];
+    initial_loc[i][1] = loc[i][1];
+    initial_loc[i][2] = loc[i][2];
     rot[i] = wb_supervisor_field_get_sf_rotation(wb_supervisor_node_get_field(robs[i], "rotation"));
-    initial_rot[i][0] = new_rot[i][0] = rot[i][0];
-    initial_rot[i][1] = new_rot[i][1] = rot[i][1];
-    initial_rot[i][2] = new_rot[i][2] = rot[i][2];
-    initial_rot[i][3] = new_rot[i][3] = rot[i][3];
+    initial_rot[i][0] = rot[i][0];
+    initial_rot[i][1] = rot[i][1];
+    initial_rot[i][2] = rot[i][2];
+    initial_rot[i][3] = rot[i][3];
     emitter[i] = wb_robot_get_device(emitter_name);
     rec[i] = wb_robot_get_device(receiver_name);
   }
@@ -89,7 +87,7 @@ int main()
   {
 
     // Get result of optimization
-    weights = pso(SWARMSIZE, NB, LWEIGHT, NBWEIGHT, VMAX, MININIT, MAXINIT, ITS, DATASIZE, ROBOTS);
+    weights = pso(SWARMSIZE, NB, LWEIGHT, NBWEIGHT, VMAX, MININIT, MAXINIT, ITS, DATASIZE, 1);
 
     // Set robot weights to optimization results
     fit = 0.0;
@@ -100,10 +98,10 @@ int main()
     }
 
     // Run FINALRUN tests and calculate average
-    for (i = 0; i < FINALRUNS; i += MAX_ROB)
+    for (i = 0; i < FINALRUNS; i += 1)
     {
-      calc_fitness(w, f, FIT_ITS, MAX_ROB);
-      for (k = 0; k < MAX_ROB && i + k < FINALRUNS; k++)
+      calc_fitness(w, f, FIT_ITS, 1);
+      for (k = 0; k < 1 && i + k < FINALRUNS; k++)
       {
         fit += f[k];
       }
@@ -159,14 +157,14 @@ void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its,
   int i, j;
 
   // Initialise robots for fitness
-  for (i = 0; i < numRobs; i++)
+  for (i = 0; i < ROBOTS; i++)
   {
     initialise_position(i);
 
     buffer[0] = DATASIZE;
     for (j = 0; j < DATASIZE; j++)
     {
-      buffer[j + 1] = weights[i][j];
+      buffer[j + 1] = weights[0][j];
     }
     buffer[DATASIZE + 1] = its;
     wb_emitter_send(emitter[i], (void *)buffer, (DATASIZE + 2) * sizeof(double));
@@ -184,7 +182,7 @@ void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its,
   for (i = 0; i < numRobs; i++)
   {
     rbuffer = (double *)wb_receiver_get_data(rec[i]);
-    fit[i] = -metrics_get_performance();
+    fit[i] = metrics_get_performance();
 
     printf("Fitness: %f\n", metrics_get_performance());
 

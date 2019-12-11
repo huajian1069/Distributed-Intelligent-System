@@ -44,12 +44,13 @@
 #define OBS_GAIN 200
 #define NUM_SENS_POTENTIAL 6
 
+
 float aggregation_threshold = 0.1;
-float aggregation_weight = 0.2;
+float aggregation_weight = 0.3;
 float dispersion_threshold = 0.3;
-float dispersion_weight = 0.002;
-float consistency_weight = 0.1;
-float migration_weight = 0.05;
+float dispersion_weight = 0.0;
+float consistency_weight = 0.0;
+float migration_weight = 0.4;
 
 WbDeviceTag left_motor;  //handler for left wheel of the robot
 WbDeviceTag right_motor; //handler for the right wheel of the robot
@@ -344,14 +345,14 @@ void reynolds_rules()
 	else
 	{
 		
-		speed[group_id][robot_id][0] += migration_weight * (migr[0] - my_position[0]);
-		speed[group_id][robot_id][1] -= migration_weight * (migr[1] - my_position[1]); //y axis of webots is inverted
+		//speed[group_id][robot_id][0] += migration_weight * (migr[0] - my_position[0]);
+		//speed[group_id][robot_id][1] -= migration_weight * (migr[1] - my_position[1]); //y axis of webots is inverted
 		
-		/*
+		
 		float norm = pow(migr[0] - my_position[0], 2) + pow(migr[1] - my_position[1], 2);
 		speed[group_id][robot_id][0] += migration_weight * (migr[0] - my_position[0]) / norm;
 		speed[group_id][robot_id][1] -= migration_weight * (migr[1] - my_position[1]) / norm; 
-		*/
+		
 		
 	}
 }
@@ -470,20 +471,35 @@ int main()
 		wb_motor_set_velocity(left_motor, msl_w);
 		wb_motor_set_velocity(right_motor, msr_w);
 
-		printf("%d %d\n", msl, msr);
 
 		optim_state_t optim_state = optim_update(ds, NB_SENSORS, msl_w, msr_w);
 		while (OPTIM_RECV_CONFIG) wb_robot_step(TIME_STEP);
 
 		if (optim_state == OPTIM_CHANGE_CONFIG) {
-			printf("Change config %d %d %f...\n", optim_config.n_params, optim_config.n_iters, optim_config.params[0]);
+			// Print
+			printf("%d params received (iterations %d)\n", optim_config.n_params, optim_config.n_iters);
+			printf("- aggregation threshold: %f\n", optim_config.params[0]);
+			printf("- aggregation weight: %f\n", optim_config.params[1]);
+			printf("- dispersion threshold: %f\n", optim_config.params[2]);
+			printf("- dispersion weight: %f\n", optim_config.params[3]);
+			printf("- consistency weight: %f\n", optim_config.params[4]);
+			printf("- migration weight: %f\n", optim_config.params[5]);
+
+			// Reinitialize
 			wb_robot_init();
 			reinitialize_states();
 			msl = msr = 0;
-			//aggregation_threshold = optim_config.params[0];
+
+			// Apply new config
+			aggregation_threshold = optim_config.params[0];
+			aggregation_weight = optim_config.params[1];
+			dispersion_threshold = optim_config.params[2];
+			dispersion_weight = optim_config.params[3];
+			consistency_weight = optim_config.params[4];
+			migration_weight = optim_config.params[5];
 		}
 		if (optim_state == OPTIM_SEND_STATS) {
-			printf("Sending stats: %f %f...\n", optim_stats.sum_prox, optim_stats.max_prox);
+			printf("Sending stats... Sum of proximity: %f, max proximity: %f\n", optim_stats.sum_prox, optim_stats.max_prox);
 		}
 
 		// Continue one step

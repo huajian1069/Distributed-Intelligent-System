@@ -10,12 +10,15 @@ WbNodeRef robots[FLOCK_SIZE];
 int k = 0;
 double avg_pt = 0.0;
 double prev_avg[2] = {0, 0};
+float absolute_migration[2];
 
-void get_robot_position(double position[], WbNodeRef robot);
-double dist(double *x, double *avg);
-void compute_fitness();
+static void get_robot_position(double position[], WbNodeRef robot);
+static double dist(double *x, double *avg);
+static void compute_fitness();
+static float dot(float *x, float *y);
+static inline float max(float x, float y);
 
-void get_robot_position(double position[], WbNodeRef robot)
+static void get_robot_position(double position[], WbNodeRef robot)
 {
     const double *translation;
     const double *rotation;
@@ -30,11 +33,22 @@ void get_robot_position(double position[], WbNodeRef robot)
 
 void metrics_init(WbNodeRef *p_robots)
 {
+    double initial_avg_location[] = {0, 0, 0};
+
     for (int i = 0; i < FLOCK_SIZE; i++)
     {
         robots[i] = p_robots[i];
         get_robot_position(loc[i], robots[i]);
+
+        initial_avg_location[0] += loc[i][0] / FLOCK_SIZE;
+        initial_avg_location[1] += loc[i][1] / FLOCK_SIZE;
+        initial_avg_location[2] += loc[i][2] / FLOCK_SIZE;
+
+        printf("Migration urge: %f %f\n", absolute_migration[0], absolute_migration[1]);
     }
+
+    absolute_migration[0] = initial_avg_location[0] + 4;
+    absolute_migration[1] = initial_avg_location[1];
 }
 
 void metrics_reset()
@@ -48,6 +62,16 @@ void metrics_reset()
     prev_avg[1] = 0;
 }
 
+static float dot(float *x, float *y)
+{
+    return x[0] * y[0] + x[1] * y[1];
+}
+
+static inline float max(float x, float y)
+{
+    return x > y ? x : y;
+}
+
 void metrics_update(WbNodeRef *p_robots)
 {
     for (int i = 0; i < FLOCK_SIZE; i++)
@@ -57,7 +81,7 @@ void metrics_update(WbNodeRef *p_robots)
     compute_fitness();
 }
 
-double dist(double *x, double *avg)
+static double dist(double *x, double *avg)
 {
     double s = 0;
     for (int i = 0; i < DIMENSION; i++)
@@ -67,7 +91,7 @@ double dist(double *x, double *avg)
     return sqrt(s);
 }
 
-void compute_fitness()
+static void compute_fitness()
 {
     //Orientation: measure the alignment bewtween robots
     double sumSin = 0, sumCos = 0;
@@ -96,7 +120,21 @@ void compute_fitness()
     ct = 1.0 / (1.0 + sumDis / FLOCK_SIZE);
 
     // Velocity: measure the average displacement velocity of the centers of mass along the direction of the migratory urge
-    vt = 1;
+    float relative_urge[2];
+    float norm;
+    float dif_avg[2];
+
+    relative_urge[0] = absolute_migration[0] - avg[0];
+    relative_urge[1] = absolute_migration[1] - avg[1];
+    norm = sqrt(pow(relative_urge[0], 2) + pow(relative_urge[1], 2));
+    relative_urge[0] /= norm;
+    relative_urge[1] /= norm;
+
+    dif_avg[0] = avg[0] - prev_avg[0];
+    dif_avg[1] = avg[1] - prev_avg[1];
+    vt = max(dot(relative_urge, dif_avg), 0) / WEBOTS_MAX_VELOCITY;
+    prev_avg[0] = avg[0];
+    prev_avg[1] = avg[1];
 
     // Performance(instant)
     pt = ot * ct * vt;
@@ -106,6 +144,7 @@ void compute_fitness()
     avg_pt = avg_pt + (pt - avg_pt) / k;
 }
 
-double metrics_get_performance() {
+double metrics_get_performance()
+{
     return avg_pt;
 }
