@@ -8,6 +8,7 @@
 void metrics_reset();
 void metrics_update(WbNodeRef* p_robots);
 void metrics_init(WbNodeRef* p_robots);
+void metrics_save(double *params, int n_params, double fitness);
 double metrics_get_performance();
 
 #endif
