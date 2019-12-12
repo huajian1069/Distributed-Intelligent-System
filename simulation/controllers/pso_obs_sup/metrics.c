@@ -2,6 +2,9 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
+#include <stdlib.h>
+
 
 #define DIMENSION 2
 
@@ -11,6 +14,7 @@ int k = 0;
 double avg_pt = 0.0;
 double prev_avg[2] = {0, 0};
 float absolute_migration[2];
+char log_filename[100];
 
 static void get_robot_position(double position[], WbNodeRef robot);
 static double dist(double *x, double *avg);
@@ -49,6 +53,8 @@ void metrics_init(WbNodeRef *p_robots)
 
     absolute_migration[0] = initial_avg_location[0] + 4;
     absolute_migration[1] = initial_avg_location[1];
+
+    sprintf(log_filename, "%s/webots_pso_%lu.csv", getenv("HOME"), (unsigned long)time(NULL));
 }
 
 void metrics_reset()
@@ -70,6 +76,19 @@ static float dot(float *x, float *y)
 static inline float max(float x, float y)
 {
     return x > y ? x : y;
+}
+
+void metrics_save(double *params, int n_params, double fitness)
+{
+    FILE *fp;
+    fp = fopen(log_filename, "a");
+
+    for (int i = 0; i < n_params; i++)
+    {
+        fprintf(fp, "%f,", params[i]);
+    }
+    fprintf(fp, "%f\r\n", fitness);
+    fclose(fp);
 }
 
 void metrics_update(WbNodeRef *p_robots)
