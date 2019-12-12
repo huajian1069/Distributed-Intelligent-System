@@ -37,7 +37,7 @@
 #define MAX_SENS 4096	  // Maximum sensibility value
 #define MAX_SPEED 800	  // Maximum speed
 #define MAX_SPEED_WEB 6.28 // Maximum speed webots
-#define FLOCK_SIZE 2	   // Size of flock
+#define FLOCK_SIZE 4	   // Size of flock
 #define N_GROUPS 1
 #define TIME_STEP 64 // [ms] Length of time step
 
@@ -47,14 +47,14 @@
 #define DELTA_T 0.064			// Timestep (seconds)
 
 #define RULE1_THRESHOLD 0.1	// Threshold to activate aggregation rule. default 0.20
-#define RULE1_WEIGHT (1.0 / 10) // Weight of aggregation rule. default 0.6/10
+#define RULE1_WEIGHT ( 1.0 / 10) // Weight of aggregation rule. default 0.6/10
 
 #define RULE2_THRESHOLD 0.07		 // Threshold to activate dispersion rule. default 0.15
 #define RULE2_WEIGHT (0.02 / 10) // Weight of dispersion rule. default 0.02/10
 
 #define RULE3_WEIGHT (1.0 / 10) // Weight of consistency rule. default 1.0/10
 
-#define MIGRATION_WEIGHT (0.8 / 10) // Wheight of attraction towards the common goal. default 0.01/10; weigth 0.4 works when only migration
+#define MIGRATION_WEIGHT (0.4 / 10) // Wheight of attraction towards the common goal. default 0.01/10; weigth 0.4 works when only migration
 
 #define MIGRATORY_URGE 1 // Tells the robots if they should just go forward or move towards a specific migratory direction
 
@@ -62,7 +62,7 @@
 
 #define OBS_RANGE 70
 
-#define OBS_GAIN 80
+#define OBS_GAIN 50
 #define NUM_SENS_POTENTIAL 6
 
 #define eps 0.05
@@ -85,7 +85,7 @@ float my_position[3];						   // X, Z, Theta of the current robot
 float prev_my_position[3];					   // X, Z, Theta of the current robot in the previous time step
 float speed[N_GROUPS][FLOCK_SIZE][2];		   // Speeds calculated with Reynold's rules
 float relative_speed[N_GROUPS][FLOCK_SIZE][2]; // Speeds calculated with Reynold's rules
-float migr[2] = {0, -0.5};					   // Migration vector
+float migr[2] = {0, -1};					   // Migration vector
 char *robot_name;
 float theta_robots[N_GROUPS][FLOCK_SIZE];
 int potential_left;
@@ -292,7 +292,7 @@ void reynolds_rules()
 	}
 
 	/* Rule 1 - Aggregation/Cohesion: move towards the center of mass */
-	if (sqrt(pow(rel_avg_loc[group_id][j], 2) + pow(rel_avg_loc[group_id][j], 2)) >
+	if (sqrt(pow(rel_avg_loc[group_id][0], 2) + pow(rel_avg_loc[group_id][1], 2)) >
 			RULE1_THRESHOLD) {
 	    for (j = 0; j < 2; j++){
 				cohesion[j] = rel_avg_loc[group_id][j];
@@ -405,7 +405,7 @@ void process_received_ping_messages(void)
 		prev_relative_pos[other_group_id][other_robot_id][0] = relative_pos[other_group_id][other_robot_id][0];
 		prev_relative_pos[other_group_id][other_robot_id][1] = relative_pos[other_group_id][other_robot_id][1];
 
-		relative_pos[other_group_id][other_robot_id][0] = -1.0 * range * sin(theta);		 // relative x pos
+		relative_pos[other_group_id][other_robot_id][0] = -1.0 * range * sin(theta);		 //relative x pos
 		relative_pos[other_group_id][other_robot_id][1] = -1.0 * range * cos(theta); // relative y pos
 
 		relative_speed[other_group_id][other_robot_id][0] = relative_speed[other_group_id][other_robot_id][0] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][0] - prev_relative_pos[other_group_id][other_robot_id][0]);
@@ -496,11 +496,11 @@ int main()
 		// Compute wheels speed from reynold's speed
 
 		// Adapt speed instinct to distance sensor values
-	/*if (max_sens > OBS_RANGE)
+	 if (max_sens > OBS_RANGE)
 		{
 			msl = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_left + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msl;
 			msr = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_right + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msr;
-		}*/
+		}
 
 		// Add Braitenberg
 		limit(&msl, 999);
