@@ -189,7 +189,7 @@ void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its,
     wb_receiver_next_packet(rec[i]);
   }
 
-  metrics_save(weights[0], DATASIZE, metrics_get_performance());
+  metrics_save(buffer + 1, DATASIZE, metrics_get_performance());
 }
 
 /* Optimization fitness function , used in pso.c */
