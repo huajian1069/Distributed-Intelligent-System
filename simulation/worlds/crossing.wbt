@@ -309,11 +309,12 @@ DEF SUPERVISOR Robot {
   controller "pso_obs_sup"
   supervisor TRUE
 }
+
 DEF epuck_0_0 E-puck {
-  translation -0.102305 -3.18597e-05 -0.101882
-  rotation -0.001435789924665121 0.999997947530817 0.0014294899249956776 1.5529903061004253
+  translation -0.102305 0.005 -0.101882
+  rotation 0 1 0 1.5529903061004253
   name "epuck_0_0"
-  controller "reynolds2"
+  controller "obstacle_avoidance"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -326,22 +327,20 @@ DEF epuck_0_0 E-puck {
   groundSensorsSlot [
     Receiver {
       name "receiver2"
-      type "infra-red"
-      channel 1
+      channel 50
     }
     Emitter {
       name "emitter2"
-      type "infra-red"
-      maxRange 0.25
-      channel 1
+      channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_0_1 E-puck {
-  translation -0.100654 -3.15195e-05 0.00596927
-  rotation 2.813831188179924e-05 0.9999994222638666 0.0010745604537483143 1.6231596938995747
+  translation -0.100654 0.005 0.00596927
+  rotation 0 1 0 1.6231596938995747
   name "epuck_0_1"
-  controller "reynolds2"
+  controller "obstacle_avoidance"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -355,22 +354,20 @@ DEF epuck_0_1 E-puck {
   groundSensorsSlot [
     Receiver {
       name "receiver2"
-      type "infra-red"
-      channel 1
+      channel 50
     }
     Emitter {
       name "emitter2"
-      type "infra-red"
-      maxRange 0.25
-      channel 1
+      channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_0_2 E-puck {
-  translation -0.09999999997420164 -3.198720128094225e-05 0.10000000001196506
-  rotation 3.3482782293014157e-06 0.9999999999887783 3.3514552407187395e-06 1.5700000000111827
+  translation -0.09999999997420164 0.005 0.10000000001196506
+  rotation 0 1 0 1.5700000000111827
   name "epuck_0_2"
-  controller "reynolds2"
+  controller "obstacle_avoidance"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -384,22 +381,20 @@ DEF epuck_0_2 E-puck {
   groundSensorsSlot [
     Receiver {
       name "receiver2"
-      type "infra-red"
-      channel 1
+      channel 50
     }
     Emitter {
       name "emitter2"
-      type "infra-red"
-      maxRange 0.25
-      channel 1
+      channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_0_3 E-puck {
-  translation -0.09999999998396611 -2.3438514636290805e-05 -0.20000000012963462
-  rotation 6.508419902891538e-05 0.9999999961874556 -5.821628475170652e-05 1.5700000007288126
+  translation -0.09999999998396611 0.005 -0.20000000012963462
+  rotation 0 1 0 1.5700000007288126
   name "epuck_0_3"
-  controller "reynolds2"
+  controller "obstacle_avoidance"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -413,22 +408,20 @@ DEF epuck_0_3 E-puck {
   groundSensorsSlot [
     Receiver {
       name "receiver2"
-      type "infra-red"
-      channel 1
+      channel 50
     }
     Emitter {
       name "emitter2"
-      type "infra-red"
-      maxRange 0.25
-      channel 1
+      channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_0_4 E-puck {
-  translation -0.0999999999742016 -3.198720128086939e-05 0.2000000000119652
-  rotation 3.348278225961163e-06 0.9999999999887783 3.3514552417168492e-06 1.57
+  translation -0.0999999999742016 0.005 0.2000000000119652
+  rotation 0 1 0 1.57
   name "epuck_0_4"
-  controller "reynolds2"
+  controller "obstacle_avoidance"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -442,22 +435,20 @@ DEF epuck_0_4 E-puck {
   groundSensorsSlot [
     Receiver {
       name "receiver2"
-      type "infra-red"
-      channel 1
+      channel 50
     }
     Emitter {
       name "emitter2"
-      type "infra-red"
-      maxRange 0.25
-      channel 1
+      channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_1_0 E-puck {
-  translation -1.9000000000000252 -3.198720128105327e-05 -1.194452262015801e-11
-  rotation 3.3483766935809422e-06 0.9999999999887783 -3.3513568548269856e-06 -1.57
+  translation -1.9000000000000252 0.005 -1.194452262015801e-11
+  rotation 0 1 0 -1.57
   name "epuck_1_0"
-  controller "reynolds2"
+  controller "obstacle_avoidance"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -471,22 +462,20 @@ DEF epuck_1_0 E-puck {
   groundSensorsSlot [
     Receiver {
       name "receiver2"
-      type "infra-red"
-      channel 1
+      channel 50
     }
     Emitter {
       name "emitter2"
-      type "infra-red"
-      maxRange 0.25
-      channel 1
+      channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_1_1 E-puck {
-  translation -1.8999999999742017 -3.198720128072367e-05 -0.10000000001196521
-  rotation 3.3482782314255596e-06 0.9999999999887783 -3.3514552389938217e-06 -1.57
+  translation -1.8999999999742017 0.005 -0.10000000001196521
+  rotation 0 1 0 -1.57
   name "epuck_1_1"
-  controller "reynolds2"
+    controller "obstacle_avoidance"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -500,22 +489,20 @@ DEF epuck_1_1 E-puck {
   groundSensorsSlot [
     Receiver {
       name "receiver2"
-      type "infra-red"
-      channel 1
+      channel 50
     }
     Emitter {
       name "emitter2"
-      type "infra-red"
-      maxRange 0.25
-      channel 1
+      channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_1_2 E-puck {
-  translation -1.9000000000000254 -3.198720128094225e-05 0.09999999998805562
-  rotation 3.3483766913676303e-06 0.9999999999887783 -3.3513568607031322e-06 -1.57
+  translation -1.9000000000000254 0.005 0.09999999998805562
+  rotation 0 1 0 -1.57
   name "epuck_1_2"
-  controller "reynolds2"
+  controller "obstacle_avoidance"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -529,22 +516,20 @@ DEF epuck_1_2 E-puck {
   groundSensorsSlot [
     Receiver {
       name "receiver2"
-      type "infra-red"
-      channel 1
+      channel 50
     }
     Emitter {
       name "emitter2"
-      type "infra-red"
-      maxRange 0.25
-      channel 1
+      channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_1_3 E-puck {
-  translation -1.9000000000000246 -3.198720128107235e-05 -0.20000000001194432
-  rotation 3.348376693822369e-06 0.9999999999887783 -3.351356855870785e-06 -1.57
+  translation -1.9000000000000246 0.005 -0.20000000001194432
+  rotation 0 1 0 -1.57
   name "epuck_1_3"
-  controller "reynolds2"
+  controller "obstacle_avoidance"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -558,22 +543,20 @@ DEF epuck_1_3 E-puck {
   groundSensorsSlot [
     Receiver {
       name "receiver2"
-      type "infra-red"
-      channel 1
+      channel 50
     }
     Emitter {
       name "emitter2"
-      type "infra-red"
-      maxRange 0.25
-      channel 1
+      channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_1_4 E-puck {
-  translation -1.900000000000025 -3.1987201280999494e-05 0.19999999998805543
-  rotation 3.3483766888391366e-06 0.9999999999887783 -3.3513568624832118e-06 -1.57
+  translation -1.900000000000025 0.005 0.19999999998805543
+  rotation 0 1 0 -1.57
   name "epuck_1_4"
-  controller "reynolds2"
+  controller "obstacle_avoidance"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -587,14 +570,12 @@ DEF epuck_1_4 E-puck {
   groundSensorsSlot [
     Receiver {
       name "receiver2"
-      type "infra-red"
-      channel 1
+      channel 50
     }
     Emitter {
       name "emitter2"
-      type "infra-red"
-      maxRange 0.25
-      channel 1
+      channel 50
     }
   ]
+  kinematic TRUE
 }

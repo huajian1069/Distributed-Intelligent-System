@@ -30,7 +30,7 @@
 #define FLOCK_SIZE 5	   // Size of flock
 #define N_GROUPS 2
 #define TIME_STEP 64 // [ms] Length of time step
-	
+
 #define AXLE_LENGTH 0.052		// Distance between wheels of robot (meters)
 #define SPEED_UNIT_RADS 0.00628 // Conversion factor from speed unit to radian per second
 #define WHEEL_RADIUS 0.0205		// Wheel radius (meters)
@@ -41,9 +41,7 @@
 #define ABS(x) ((x >= 0) ? (x) : -(x))
 
 #define OBS_RANGE 70
-#define OBS_GAIN 200
 #define NUM_SENS_POTENTIAL 6
-
 
 float aggregation_threshold = 0.1;
 float aggregation_weight = 0.3;
@@ -51,6 +49,7 @@ float dispersion_threshold = 0.3;
 float dispersion_weight = 0.0;
 float consistency_weight = 0.0;
 float migration_weight = 0.4;
+float obs_gain = 200;
 
 WbDeviceTag left_motor;  //handler for left wheel of the robot
 WbDeviceTag right_motor; //handler for the right wheel of the robot
@@ -66,25 +65,28 @@ int group_id, robot_id; // Unique and normalized (between 0 and FLOCK_SIZE-1) ro
 
 float relative_pos[N_GROUPS][FLOCK_SIZE][3];	  // relative X, Z, Theta of all robots
 float prev_relative_pos[N_GROUPS][FLOCK_SIZE][3]; // Previous relative  X, Z, Theta values
-float my_position[3];						   // X, Z, Theta of the current robot
-float prev_my_position[3];					   // X, Z, Theta of the current robot in the previous time step
-float speed[N_GROUPS][FLOCK_SIZE][2];		   // Speeds calculated with Reynold's rules
-float relative_speed[N_GROUPS][FLOCK_SIZE][2]; // Speeds calculated with Reynold's rules
-float migr[2] = {0, -4};					   // Migration vector
+float my_position[3];							  // X, Z, Theta of the current robot
+float prev_my_position[3];						  // X, Z, Theta of the current robot in the previous time step
+float speed[N_GROUPS][FLOCK_SIZE][2];			  // Speeds calculated with Reynold's rules
+float relative_speed[N_GROUPS][FLOCK_SIZE][2];	// Speeds calculated with Reynold's rules
+float migr[2] = {0, -4};						  // Migration vector
 char *robot_name;
 int potential_left;
 int potential_right;
 float w_difference;
 
-
-void reinitialize_states() {
-	for (int i = 0; i < 3; i++) {
+void reinitialize_states()
+{
+	for (int i = 0; i < 3; i++)
+	{
 		my_position[i] = 0;
 		prev_my_position[i] = 0;
 	}
 
-	for (int i = 0; i < N_GROUPS; i++) {
-		for (int j = 0; j < FLOCK_SIZE; j++) {
+	for (int i = 0; i < N_GROUPS; i++)
+	{
+		for (int j = 0; j < FLOCK_SIZE; j++)
+		{
 			relative_pos[i][j][0] = 0;
 			relative_pos[i][j][1] = 0;
 			relative_pos[i][j][2] = 0;
@@ -245,8 +247,8 @@ void potential_field()
 	if (max_sens > OBS_RANGE)
 	{
 		w_difference = 2 * (max_sens - OBS_RANGE) * sqrt(pow(normal_vector[0], 2) + pow(normal_vector[1] + 1, 2)) * (ABS(normal_vector[0]) / normal_vector[0]);
-		potential_right = OBS_GAIN * (log10(max_sens - OBS_RANGE)) - w_difference / 2;
-		potential_left = OBS_GAIN * (log10(max_sens - OBS_RANGE)) + w_difference / 2;
+		potential_right = obs_gain * (log10(max_sens - OBS_RANGE)) - w_difference / 2;
+		potential_left = obs_gain * (log10(max_sens - OBS_RANGE)) + w_difference / 2;
 	}
 	else
 	{
@@ -302,7 +304,10 @@ void reynolds_rules()
 	/* Rule 1 - Aggregation/Cohesion: move towards the center of mass */
 	for (j = 0; j < 2; j++)
 	{
-		cohesion[j] = rel_avg_loc[group_id][j];
+		if (sqrt(pow(relative_pos[group_id][robot_id][0] - rel_avg_loc[group_id][0], 2) + pow(relative_pos[group_id][robot_id][1] - rel_avg_loc[group_id][1], 2)) > aggregation_threshold)
+		{
+			cohesion[j] = rel_avg_loc[group_id][j];
+		}
 	}
 
 	/* Rule 2 - Dispersion/Separation: keep far enough from flockmates */
@@ -344,16 +349,13 @@ void reynolds_rules()
 	}
 	else
 	{
-		
+
 		//speed[group_id][robot_id][0] += migration_weight * (migr[0] - my_position[0]);
 		//speed[group_id][robot_id][1] -= migration_weight * (migr[1] - my_position[1]); //y axis of webots is inverted
-		
-		
+
 		float norm = pow(migr[0] - my_position[0], 2) + pow(migr[1] - my_position[1], 2);
 		speed[group_id][robot_id][0] += migration_weight * (migr[0] - my_position[0]) / norm;
-		speed[group_id][robot_id][1] -= migration_weight * (migr[1] - my_position[1]) / norm; 
-		
-		
+		speed[group_id][robot_id][1] -= migration_weight * (migr[1] - my_position[1]) / norm;
 	}
 }
 
@@ -415,9 +417,9 @@ int main()
 {
 	int msl, msr; // Wheel speeds
 	float msl_w, msr_w;
-	int i;						 // Loop counter
-	int distances[NB_SENSORS];   // Array for the distance sensor readings
-	int max_sens;				 // Store highest sensor value
+	int i;					   // Loop counter
+	int distances[NB_SENSORS]; // Array for the distance sensor readings
+	int max_sens;			   // Store highest sensor value
 
 	reset(); // Resetting the robot
 
@@ -458,7 +460,7 @@ int main()
 		// Adapt speed instinct to distance sensor values
 		if (max_sens > OBS_RANGE)
 		{
-			msl = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_left + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log(max_sens))) * msl;
+			msl = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_left + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msl;
 			msr = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_right + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msr;
 		}
 
@@ -471,11 +473,12 @@ int main()
 		wb_motor_set_velocity(left_motor, msl_w);
 		wb_motor_set_velocity(right_motor, msr_w);
 
-
 		optim_state_t optim_state = optim_update(ds, NB_SENSORS, msl_w, msr_w);
-		while (OPTIM_RECV_CONFIG) wb_robot_step(TIME_STEP);
+		while (OPTIM_RECV_CONFIG)
+			wb_robot_step(TIME_STEP);
 
-		if (optim_state == OPTIM_CHANGE_CONFIG) {
+		if (optim_state == OPTIM_CHANGE_CONFIG)
+		{
 			// Print
 			printf("%d params received (iterations %d)\n", optim_config.n_params, optim_config.n_iters);
 			printf("- aggregation threshold: %f\n", optim_config.params[0]);
@@ -498,7 +501,8 @@ int main()
 			consistency_weight = optim_config.params[4];
 			migration_weight = optim_config.params[5];
 		}
-		if (optim_state == OPTIM_SEND_STATS) {
+		if (optim_state == OPTIM_SEND_STATS)
+		{
 			printf("Sending stats... Sum of proximity: %f, max proximity: %f\n", optim_stats.sum_prox, optim_stats.max_prox);
 		}
 
