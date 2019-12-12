@@ -623,6 +623,7 @@ DEF epuck_0_3 E-puck {
       channel 50
     }
   ]
+  kinematic TRUE
 }
 DEF epuck_0_4 E-puck {
   translation -2.900000000000025 0.005 -0.20000000001194462
