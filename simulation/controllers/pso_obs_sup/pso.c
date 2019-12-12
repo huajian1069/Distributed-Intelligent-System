@@ -37,6 +37,8 @@ int robots;
 int nb;
 char label[30];
 
+const float initial_weights[DATASIZE] = { 0.15, 0.2, 0.3, 0.002, 0.1, 0.03 }; 
+
 /* Particle swarm optimization function                                      */
 /*                                                                           */
 /* Parameters:                                                               */
@@ -88,7 +90,7 @@ double* pso(int n_swarmsize, int n_nb, double lweight, double nbweight, double v
   for (i = 0; i < swarmsize; i++) {
     for (j = 0; j < datasize; j++) {
       // Randomly assign initial value in [min,max]
-      swarm[i][j] = (max-min)*rnd()+min;
+      swarm[i][j] = initial_weights[j];
       lbest[i][j] = swarm[i][j];           // Best configurations are initially current configurations
       nbbest[i][j] = swarm[i][j];
       v[i][j] = 2.0*vmax*rnd()-vmax;         // Random initial velocity

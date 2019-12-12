@@ -9,7 +9,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation -0.9931345111565514 -0.11262694456245013 -0.03160718444222321 1.03351
-  position -1.6585415096424505 5.666309726373233 3.637095016590059
+  position -0.19859856883782406 8.428920266091401 5.51068092893136
 }
 PointLight {
   intensity 0.5
@@ -623,7 +623,6 @@ DEF epuck_0_3 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_0_4 E-puck {
   translation -2.900000000000025 0.005 -0.20000000001194462

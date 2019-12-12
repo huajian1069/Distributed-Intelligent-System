@@ -147,6 +147,7 @@ void initialise_position(int rob_id)
 {
   wb_supervisor_field_set_sf_vec3f(wb_supervisor_node_get_field(robs[rob_id], "translation"), initial_loc[rob_id]);
   wb_supervisor_field_set_sf_rotation(wb_supervisor_node_get_field(robs[rob_id], "rotation"), initial_rot[rob_id]);
+  wb_supervisor_node_restart_controller(robs[rob_id]);
 }
 
 // Distribute fitness functions among robots
@@ -157,10 +158,14 @@ void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its,
   int i, j;
 
   // Initialise robots for fitness
+    wb_supervisor_simulation_reset_physics();
+
   for (i = 0; i < ROBOTS; i++)
   {
     initialise_position(i);
+  }
 
+for (i = 0; i < ROBOTS; i++) {
     buffer[0] = DATASIZE;
     for (j = 0; j < DATASIZE; j++)
     {

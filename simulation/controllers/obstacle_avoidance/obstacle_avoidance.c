@@ -19,7 +19,6 @@
 #include <webots/distance_sensor.h>
 #include <webots/emitter.h>
 #include <webots/receiver.h>
-
 #include "optim.h"
 
 #define NB_SENSORS 8	   // Number of distance sensors
@@ -36,21 +35,32 @@
 #define WHEEL_RADIUS 0.0205		// Wheel radius (meters)
 #define DELTA_T 0.064			// Timestep (seconds)
 
+#define RULE1_THRESHOLD 0.15	// Threshold to activate aggregation rule. default 0.20
+#define RULE1_WEIGHT (2.0 / 10) // Weight of aggregation rule. default 0.6/10
+
+#define RULE2_THRESHOLD 0.3		 // Threshold to activate dispersion rule. default 0.15
+#define RULE2_WEIGHT (0.02 / 10) // Weight of dispersion rule. default 0.02/10
+
+#define RULE3_WEIGHT (1.0 / 10) // Weight of consistency rule. default 1.0/10
+
+#define MIGRATION_WEIGHT (0.3 / 10) // Wheight of attraction towards the common goal. default 0.01/10
+
 #define MIGRATORY_URGE 1 // Tells the robots if they should just go forward or move towards a specific migratory direction
 
 #define ABS(x) ((x >= 0) ? (x) : -(x))
 
 #define OBS_RANGE 70
+
+#define OBS_GAIN 150
 #define NUM_SENS_POTENTIAL 6
 
-float aggregation_threshold = 0.1;
-float aggregation_weight = 0.3;
+float aggregation_threshold = 0.15;
+float aggregation_weight = 0.2;
 float dispersion_threshold = 0.3;
-float dispersion_weight = 0.0;
-float consistency_weight = 0.0;
-float migration_weight = 0.4;
-float obs_gain = 200;
-
+float dispersion_weight = 0.002;
+float consistency_weight = 0.1;
+float migration_weight = 0.03;
+float obs_gain = 150;
 WbDeviceTag left_motor;  //handler for left wheel of the robot
 WbDeviceTag right_motor; //handler for the right wheel of the robot
 
@@ -65,49 +75,27 @@ int group_id, robot_id; // Unique and normalized (between 0 and FLOCK_SIZE-1) ro
 
 float relative_pos[N_GROUPS][FLOCK_SIZE][3];	  // relative X, Z, Theta of all robots
 float prev_relative_pos[N_GROUPS][FLOCK_SIZE][3]; // Previous relative  X, Z, Theta values
-float my_position[3];							  // X, Z, Theta of the current robot
-float prev_my_position[3];						  // X, Z, Theta of the current robot in the previous time step
-float speed[N_GROUPS][FLOCK_SIZE][2];			  // Speeds calculated with Reynold's rules
-float relative_speed[N_GROUPS][FLOCK_SIZE][2];	// Speeds calculated with Reynold's rules
-float migr[2] = {0, -4};						  // Migration vector
+float my_position[3];						   // X, Z, Theta of the current robot
+float prev_my_position[3];					   // X, Z, Theta of the current robot in the previous time step
+float speed[N_GROUPS][FLOCK_SIZE][2];		   // Speeds calculated with Reynold's rules
+float relative_speed[N_GROUPS][FLOCK_SIZE][2]; // Speeds calculated with Reynold's rules
+int initialized[N_GROUPS][FLOCK_SIZE];		   // != 0 if initial positions have been received
+float migr[2] = {0, -5};					   // Migration vector
 char *robot_name;
+float theta_robots[N_GROUPS][FLOCK_SIZE];
 int potential_left;
 int potential_right;
 float w_difference;
 
-void reinitialize_states()
-{
-	for (int i = 0; i < 3; i++)
-	{
-		my_position[i] = 0;
-		prev_my_position[i] = 0;
-	}
-
-	for (int i = 0; i < N_GROUPS; i++)
-	{
-		for (int j = 0; j < FLOCK_SIZE; j++)
-		{
-			relative_pos[i][j][0] = 0;
-			relative_pos[i][j][1] = 0;
-			relative_pos[i][j][2] = 0;
-			prev_relative_pos[i][j][0] = 0;
-			prev_relative_pos[i][j][1] = 0;
-			prev_relative_pos[i][j][2] = 0;
-			relative_speed[i][j][0] = 0;
-			relative_speed[i][j][1] = 0;
-			speed[i][j][0] = 0;
-			speed[i][j][1] = 0;
-		}
-	}
-
-	potential_left = 0;
-	potential_right = 0;
-	w_difference = 0;
-}
 
 /*
  * Reset the robot's devices and get its ID
  */
+
+inline float min(float a, float b) {
+	return (a < b) ? a : b;
+}
+
 static void reset()
 {
 	int i;
@@ -225,7 +213,7 @@ void potential_field()
 	}
 	if (sum_sensors <= 0)
 		return;
-	//printf("robot id %d %s %d\n", robot_id, "sum_sensors", sum_sensors);
+
 	for (int i = 0; i < NUM_SENS_POTENTIAL; i++)
 	{
 		for (int j = 0; j < 2; j++)
@@ -304,14 +292,10 @@ void reynolds_rules()
 	/* Rule 1 - Aggregation/Cohesion: move towards the center of mass */
 	for (j = 0; j < 2; j++)
 	{
-		if (sqrt(pow(relative_pos[group_id][robot_id][0] - rel_avg_loc[group_id][0], 2) + pow(relative_pos[group_id][robot_id][1] - rel_avg_loc[group_id][1], 2)) > aggregation_threshold)
-		{
-			cohesion[j] = rel_avg_loc[group_id][j];
-		}
+		cohesion[j] = rel_avg_loc[group_id][j];
 	}
 
 	/* Rule 2 - Dispersion/Separation: keep far enough from flockmates */
-
 	for (i = 0; i < FLOCK_SIZE; i++)
 	{
 		if (i == robot_id)
@@ -350,12 +334,15 @@ void reynolds_rules()
 	else
 	{
 
-		//speed[group_id][robot_id][0] += migration_weight * (migr[0] - my_position[0]);
-		//speed[group_id][robot_id][1] -= migration_weight * (migr[1] - my_position[1]); //y axis of webots is inverted
-
+		/*
 		float norm = pow(migr[0] - my_position[0], 2) + pow(migr[1] - my_position[1], 2);
-		speed[group_id][robot_id][0] += migration_weight * (migr[0] - my_position[0]) / norm;
-		speed[group_id][robot_id][1] -= migration_weight * (migr[1] - my_position[1]) / norm;
+		speed[group_id][robot_id][0] += MIGRATION_WEIGHT * (migr[0] - my_position[0]) / norm;
+		speed[group_id][robot_id][1] -= MIGRATION_WEIGHT * (migr[1] - my_position[1]) / norm;
+		*/
+			// printf("%f\n", MIGRATION_WEIGHT * (migr[0] - my_position[0]));
+
+		speed[group_id][robot_id][0] += min(MIGRATION_WEIGHT * (migr[0] - my_position[0]), MIGRATION_WEIGHT);
+		speed[group_id][robot_id][1] -= min(MIGRATION_WEIGHT * (migr[1] - my_position[1]), MIGRATION_WEIGHT); //y axis of webots is inverted
 	}
 }
 
@@ -417,9 +404,9 @@ int main()
 {
 	int msl, msr; // Wheel speeds
 	float msl_w, msr_w;
-	int i;					   // Loop counter
-	int distances[NB_SENSORS]; // Array for the distance sensor readings
-	int max_sens;			   // Store highest sensor value
+	int i;						 // Loop counter
+	int distances[NB_SENSORS];   // Array for the distance sensor readings
+	int max_sens;				 // Store highest sensor value
 
 	reset(); // Resetting the robot
 
@@ -452,11 +439,11 @@ int main()
 			max_sens = max_sens > distances[i] ? max_sens : distances[i];	  // Check if new highest sensor value
 		}
 		potential_field();
-		// Reynold's rules with all previous info (updates the speed[][] table)
 		reynolds_rules();
 		compute_wheel_speeds(&msl, &msr);
 
 		// Compute wheels speed from reynold's speed
+
 		// Adapt speed instinct to distance sensor values
 		if (max_sens > OBS_RANGE)
 		{
@@ -473,9 +460,8 @@ int main()
 		wb_motor_set_velocity(left_motor, msl_w);
 		wb_motor_set_velocity(right_motor, msr_w);
 
+
 		optim_state_t optim_state = optim_update(ds, NB_SENSORS, msl_w, msr_w);
-		while (OPTIM_RECV_CONFIG)
-			wb_robot_step(TIME_STEP);
 
 		if (optim_state == OPTIM_CHANGE_CONFIG)
 		{
@@ -488,10 +474,6 @@ int main()
 			printf("- consistency weight: %f\n", optim_config.params[4]);
 			printf("- migration weight: %f\n", optim_config.params[5]);
 
-			// Reinitialize
-			wb_robot_init();
-			reinitialize_states();
-			msl = msr = 0;
 
 			// Apply new config
 			aggregation_threshold = optim_config.params[0];
