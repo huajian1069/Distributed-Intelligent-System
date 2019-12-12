@@ -62,7 +62,7 @@
 
 #define OBS_RANGE 70
 
-#define OBS_GAIN 50
+#define OBS_GAIN 25
 #define NUM_SENS_POTENTIAL 6
 
 #define eps 0.05
