@@ -16,10 +16,10 @@
 #define NB 1          // Number of neighbors on each side
 #define LWEIGHT 2.0   // Weight of attraction to personal best
 #define NBWEIGHT 2.0  // Weight of attraction to neighborhood best
-#define VMAX 40.0     // Maximum velocity particle can attain
+#define VMAX 2.0     // Maximum velocity particle can attain
 #define MININIT 0.0 // Lower bound on initialization value
 #define MAXINIT 1.0  // Upper bound on initialization value
-#define ITS 20        // Number of iterations to run
+#define ITS 200        // Number of iterations to run
 
 /* Neighborhood types */
 #define STANDARD -1

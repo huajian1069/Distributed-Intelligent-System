@@ -90,7 +90,7 @@ double* pso(int n_swarmsize, int n_nb, double lweight, double nbweight, double v
   for (i = 0; i < swarmsize; i++) {
     for (j = 0; j < datasize; j++) {
       // Randomly assign initial value in [min,max]
-      swarm[i][j] = initial_weights[j];
+      swarm[i][j] = initial_weights[j] + 0.4 * initial_weights[j] * rnd() - 0.2 * initial_weights[j];
       lbest[i][j] = swarm[i][j];           // Best configurations are initially current configurations
       nbbest[i][j] = swarm[i][j];
       v[i][j] = 2.0*vmax*rnd()-vmax;         // Random initial velocity
