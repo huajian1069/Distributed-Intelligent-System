@@ -43,10 +43,10 @@ void ircomListen ()
     ircomReceiveData.state = 0;
     ircomData.fsm = IRCOM_FSM_RECEIVE;
     ircomReceiveData.distance = -1;
-    
+
     // set interrupt trigger speed
     PR1 = (IRCOM_RECEIVESPEED * MICROSEC) / 8.0;
-    
+
     // process messages again
     ircomPause(0);
 }
@@ -61,7 +61,7 @@ inline int ircomIsReceiving ()
 {
     if (ircomReceiveData.receiving == 1)
 	return 1;
-    else 
+    else
 	return 0;
 }
 
@@ -69,7 +69,7 @@ inline int ircomIsListening ()
 {
     if (ircomData.fsm == IRCOM_FSM_RECEIVE)
 	return 1;
-    else 
+    else
 	return 0;
 }
 
@@ -77,12 +77,12 @@ void ircomStopListening ()
 {
     // stop receiving
     ircomReceiveData.done = 0;
-    ircomReceiveData.receiving = 0;    
+    ircomReceiveData.receiving = 0;
     ircomReceiveData.state = 0;
-    
+
     // reenable prox in ad
     ad_disable_proximity = 0;
-    
+
     // set fsm in idle mode
     ircomData.fsm = IRCOM_FSM_IDLE;
 }
@@ -90,7 +90,7 @@ void ircomStopListening ()
 
 //================================================================
 // FSM Receive : entry point
-// this should be called by AD interrupt 
+// this should be called by AD interrupt
 // after a full window of samples has been acquired
 void ircomReceiveMain()
 {
@@ -98,7 +98,7 @@ void ircomReceiveMain()
     {
     case 0 :
 	ircomReceiveListen(); break;
-    case 1 : 
+    case 1 :
 	ircomReceiveWord(); break;
     }
 }
@@ -110,7 +110,7 @@ void ircomReceiveListen()
 	return;
 
     int maxSensor = ircomReceiveGetMaxSensor();
-    
+
     // no significant modulation perceived ?
     if (maxSensor < 0)
 	return;
@@ -125,7 +125,7 @@ void ircomReceiveListen()
     {
 	return;
     }
-  
+
     // first thing, find out the shift of the signal
     int shift, u;
     int min = 4096;
@@ -151,7 +151,7 @@ void ircomReceiveListen()
     ircomReceiveData.receivingSensor = maxSensor;
     ircomReceiveData.done = 0;
     ircomReceiveData.error = 0;
-    ircomReceiveData.receiving = 1;    
+    ircomReceiveData.receiving = 1;
     ircomReceiveData.state = 1;
 }
 
@@ -172,7 +172,7 @@ void ircomReceiveWord()
 	// stop receiveing, discard message
 	ircomReceiveData.done = 1;
 	ircomReceiveData.error = 1;
-	ircomReceiveData.receiving = 0;    
+	ircomReceiveData.receiving = 0;
 	ircomReceiveData.state = 0;
 
 	// reenable prox in ad
@@ -186,7 +186,7 @@ void ircomReceiveWord()
 
 	return;
     }
-    
+
     ircomReceiveData.word[ircomReceiveData.currentBit++] = signal;
 
     // end of message ?
@@ -197,18 +197,18 @@ void ircomReceiveWord()
 
 	// stop receiving
 	ircomReceiveData.done = 1;
-	ircomReceiveData.receiving = 0;    
+	ircomReceiveData.receiving = 0;
 	ircomReceiveData.state = 0;
 	//Set distance and direction
 	ircomReceiveData.distance = ircomEstimateDistance ( (int) ircomReceiveData.distance);
-	ircomReceiveData.direction = ircomEstimateDirection( ircomReceiveData.receivingSensor); 
+	ircomReceiveData.direction = ircomEstimateDirection( ircomReceiveData.receivingSensor);
 
 	// record in the msg queue
 	long int value = ircomBin2Int(ircomReceiveData.word);
-	ircomPushMessage(value, 
-			 ircomReceiveData.distance, 
-			 ircomReceiveData.direction, 
-			 ircomReceiveData.receivingSensor, 
+	ircomPushMessage(value,
+			 ircomReceiveData.distance,
+			 ircomReceiveData.direction,
+			 ircomReceiveData.receivingSensor,
 			 ircomReceiveData.error);
 
 	// reenable prox in ad
@@ -220,7 +220,7 @@ void ircomReceiveWord()
 	else
 	    ircomData.fsm = IRCOM_FSM_IDLE;
 
-	return;	
+	return;
     }
 }
 
@@ -248,7 +248,7 @@ int ircomReceiveGetMaxSensor()
 	    }
 	    index += IRCOM_NB_IR_SENSORS;
 	}
-		    
+
 	if (max - min > maxDiff)
 	{
 	    maxDiff = max - min;
@@ -303,7 +303,7 @@ int ircomReceiveDemodulate (int rawOutput)
     for (i = 0; i < IRCOM_SAMPLING_WINDOW; i++)
     {
 	rs[i] -= mean;
-    }		
+    }
 
     // start counting number of switch around mean signal
     int signalState;
@@ -311,7 +311,7 @@ int ircomReceiveDemodulate (int rawOutput)
 	signalState = 1;
     else
 	signalState = -1;
-	
+
     int switchCount = 0;
 
     for (i = 1; i < IRCOM_SAMPLING_WINDOW; i++)
@@ -367,4 +367,3 @@ int ircomReceiveCheckCRC()
 
 // IRCOM_RECEIVE_C
 #endif
-

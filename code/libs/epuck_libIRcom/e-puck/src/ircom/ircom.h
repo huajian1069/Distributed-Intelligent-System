@@ -37,6 +37,8 @@
 #define IRCOM_DETECTION_THRESHOLD_SWITCH 2 // min number of switch to initiate message
 #define IRCOM_PROX_TRIGGER 2460 // trigger proximity procedure every 81.3 usec * IRCOM_PROX_TRIGGER
 
+unsigned long get_epoch_ms();
+
 typedef char ircomWord[IRCOM_WORDSIZE + 4]; 
 
 // message queue

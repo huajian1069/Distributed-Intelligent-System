@@ -39,6 +39,12 @@
 volatile Ircom ircomData;
 volatile IrcomReceive ircomReceiveData;
 volatile IrcomSend ircomSendData;
+volatile unsigned long epoch_ms = 0;
+volatile unsigned long epoch_divider = 0;
+
+unsigned long get_epoch_ms() {
+    return epoch_ms;
+}
 
 // start the timer that operates ircom
 // default values are set and ircom module is waiting for further instructions
@@ -149,6 +155,11 @@ void _ISRFAST _T1Interrupt(void)
     
     // update time counter
     ircomData.time ++;
+	epoch_divider++;
+	if (epoch_divider > 10) {
+		epoch_ms++;
+		epoch_divider=0;
+	}
 }
 
 // IRCOM_C

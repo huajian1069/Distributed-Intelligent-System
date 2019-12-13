@@ -1,5 +1,5 @@
 rid=0
-for i in 71 90
+for i in 71 117 90
 do
    make clean
    ROBOT_ID=$rid make all

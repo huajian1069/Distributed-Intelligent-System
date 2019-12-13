@@ -27,6 +27,7 @@
 #include <btcom/btcom.h>
 
 #include <time.h>
+#include <p30f6014a.h>
 
 #ifndef M_PI
 #define M_PI 3.14
@@ -37,7 +38,7 @@
 #define MAX_SENS 4096	  // Maximum sensibility value
 #define MAX_SPEED 800	  // Maximum speed
 #define MAX_SPEED_WEB 6.28 // Maximum speed webots
-#define FLOCK_SIZE 4	   // Size of flock
+#define FLOCK_SIZE 3	   // Size of flock
 #define N_GROUPS 1
 #define TIME_STEP 64 // [ms] Length of time step
 
@@ -47,14 +48,14 @@
 #define DELTA_T 0.064			// Timestep (seconds)
 
 #define RULE1_THRESHOLD 0.1	// Threshold to activate aggregation rule. default 0.20
-#define RULE1_WEIGHT ( 1.0 / 10) // Weight of aggregation rule. default 0.6/10
+#define RULE1_WEIGHT ( 2.0 / 10) // Weight of aggregation rule. default 0.6/10
 
 #define RULE2_THRESHOLD 0.07		 // Threshold to activate dispersion rule. default 0.15
-#define RULE2_WEIGHT (0.02 / 10) // Weight of dispersion rule. default 0.02/10
+#define RULE2_WEIGHT (1.0 / 10) // Weight of dispersion rule. default 0.02/10
 
 #define RULE3_WEIGHT (1.0 / 10) // Weight of consistency rule. default 1.0/10
 
-#define MIGRATION_WEIGHT (0.4 / 10) // Wheight of attraction towards the common goal. default 0.01/10; weigth 0.4 works when only migration
+#define MIGRATION_WEIGHT (0.6 / 10) // Wheight of attraction towards the common goal. default 0.01/10; weigth 0.4 works when only migration
 
 #define MIGRATORY_URGE 1 // Tells the robots if they should just go forward or move towards a specific migratory direction
 
@@ -62,7 +63,7 @@
 
 #define OBS_RANGE 70
 
-#define OBS_GAIN 25
+#define OBS_GAIN 200
 #define NUM_SENS_POTENTIAL 6
 
 #define eps 0.05
@@ -92,9 +93,13 @@ int potential_left;
 int potential_right;
 float w_difference;
 char buffer[80];
-long epoch = 0;
 time_t time_ptr;
 float prev_direction;
+int fast_rotation=0;
+float rel_avg_loc[N_GROUPS][2];   // Flock average positions
+float rel_avg_speed[N_GROUPS][2]; // Flock average speeds
+int counter=0;
+float prev_rel_avg_y=0;
 
 void wait(unsigned long num) {
 	while (num > 0) {num--;}
@@ -233,9 +238,12 @@ void potential_field()
 		normal_vector[1] = (-mean_vector[0]);
 	}
 
+
 	if (max_sens > OBS_RANGE)
 	{
-		w_difference = 2 * (max_sens - OBS_RANGE) * sqrt(pow(normal_vector[0], 2) + pow(normal_vector[1] + 1, 2)) * (ABS(normal_vector[0]) / normal_vector[0]);
+	  w_difference = 2 * (max_sens - OBS_RANGE) * sqrt(pow(normal_vector[0], 2) + pow(normal_vector[1] + 1, 2)) * (ABS(normal_vector[0]) / normal_vector[0]);
+		//sprintf(buffer, "diiff %f \r\n", w_difference);
+		//e_send_uart1_char(buffer, strlen(buffer));
 		potential_right = OBS_GAIN * (log10(max_sens - OBS_RANGE)) - w_difference / 2;
 		potential_left = OBS_GAIN * (log10(max_sens - OBS_RANGE)) + w_difference / 2;
 	}
@@ -245,6 +253,16 @@ void potential_field()
 		potential_left = 0;
 	}
 }
+float limit_difference(float d){
+	const float DIFF=200.0;
+	float difference;
+	if(d > DIFF){ difference=DIFF;}
+	else {
+		if (d < -DIFF) {difference=-DIFF;}
+	  else { difference=d;}}
+	return difference;
+}
+
 
 /*
  *  Update speed according to Reynold's rules
@@ -253,8 +271,6 @@ void potential_field()
 void reynolds_rules()
 {
 	int i, j, g;					  // Loop counters
-	float rel_avg_loc[N_GROUPS][2];   // Flock average positions
-	float rel_avg_speed[N_GROUPS][2]; // Flock average speeds
 	float abs_avg_loc[N_GROUPS][2];
 	float cohesion[2] = {0, 0};
 	float dispersion[2] = {0, 0};
@@ -347,6 +363,13 @@ void reynolds_rules()
 		 speed[group_id][robot_id][1] = 0.0;
    }
  }
+ if (prev_rel_avg_y==rel_avg_loc[group_id][1]){
+	 counter++;
+ }else{
+	 counter=0;
+ }
+ prev_rel_avg_y=rel_avg_loc[group_id][1];
+
 	sprintf(buffer, "rel avg x is %f  rel avg y is %f\r\n",rel_avg_loc[group_id][0], rel_avg_loc[group_id][1]);
 	e_send_uart1_char(buffer, strlen(buffer));
 }
@@ -380,7 +403,7 @@ void process_received_ping_messages(void)
 
 	IrcomMessage imsg;
 	ircomPopMessage(&imsg);
-	if(imsg.error == 0)
+	if((imsg.error == 0) && (fast_rotation==0))
 	{
 
 		// imsg.value
@@ -408,6 +431,7 @@ void process_received_ping_messages(void)
 		relative_pos[other_group_id][other_robot_id][0] = -1.0 * range * sin(theta);		 //relative x pos
 		relative_pos[other_group_id][other_robot_id][1] = -1.0 * range * cos(theta); // relative y pos
 
+
 		relative_speed[other_group_id][other_robot_id][0] = relative_speed[other_group_id][other_robot_id][0] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][0] - prev_relative_pos[other_group_id][other_robot_id][0]);
 		relative_speed[other_group_id][other_robot_id][1] = relative_speed[other_group_id][other_robot_id][1] * 0.0 + 1.0 * (1 / DELTA_T) * (relative_pos[other_group_id][other_robot_id][1] - prev_relative_pos[other_group_id][other_robot_id][1]);
 
@@ -416,24 +440,21 @@ void process_received_ping_messages(void)
 	}
 
 }
-
-void InitTMR5(void)
-{
-  T5CON = 0;                    //
-  T5CONbits.TCKPS=3;            // prescsaler = 256
-  TMR5 = 0;                     // clear timer 5
-  PR5 = (500.0*MILLISEC)/256.0; // interrupt every 500ms with 256 prescaler
-  IFS1bits.T5IF = 0;            // clear interrupt flag
-  IEC1bits.T5IE = 1;            // set interrupt enable bit
-  T5CONbits.TON = 1;            // start Timer5
-
+void wait_ms(unsigned long ms){
+	volatile unsigned long time_start = get_epoch_ms();
+	volatile unsigned long time_stop;
+	while(1){
+		time_stop=get_epoch_ms();
+		//sprintf(buffer, "timer %lu \r\n", time_stop);
+	  //e_send_uart1_char(buffer, strlen(buffer));
+		e_set_speed_left(0);
+		e_set_speed_right(0);
+		if(time_stop-time_start>ms) break;
+	}
 }
 
-void _ISRFAST _T5Interrupt(void)
-{
-  IFS1bits.T5IF = 0;            // clear interrupt flag
-	epoch++;
-}
+
+
 
 // the main function
 int main()
@@ -447,7 +468,7 @@ int main()
 	int max_sens;				 // Store highest sensor value
 
 	reset(); // Resetting the robot
-	InitTMR5();
+
 
 
 	msl = 0;
@@ -471,9 +492,8 @@ int main()
 		prev_my_position[1] = my_position[1];
 
 		update_self_motion(msl, msr);
-		//sprintf(buffer, "my_pos x %f my pos y %f\r\n", my_position[0], my_position[1]);
-	 // e_send_uart1_char(buffer, strlen(buffer));
-
+		//sprintf(buffer, "timer %lu \r\n", get_epoch_ms());
+	  //e_send_uart1_char(buffer, strlen(buffer));
 
 		process_received_ping_messages();
 		//sprintf(buffer, "sent \r\n");
@@ -496,15 +516,32 @@ int main()
 		// Compute wheels speed from reynold's speed
 
 		// Adapt speed instinct to distance sensor values
+   fast_rotation=0;
 	 if (max_sens > OBS_RANGE)
 		{
+			fast_rotation=1;
 			msl = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_left + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msl;
 			msr = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_right + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msr;
 		}
-
-		// Add Braitenberg
+    //limit wheels
 		limit(&msl, 999);
 		limit(&msr, 999);
+
+		//checking he is not too away
+		//sprintf(buffer, "counter: %d\r\n", counter);
+	  //e_send_uart1_char(buffer, strlen(buffer));
+    if (counter>10){
+			if(rel_avg_loc[group_id][1]>0.05){
+				msl=0.0;
+				msr=0.0;
+				wait_ms(2000);
+				counter=0;
+			}
+		}
+
+
+
+
 		// Set speed
 		msl_w = msl * MAX_SPEED_WEB / 1000;
 		msr_w = msr * MAX_SPEED_WEB / 1000;
