@@ -48,22 +48,22 @@
 #define DELTA_T 0.064			// Timestep (seconds)
 
 #define RULE1_THRESHOLD 0.1	// Threshold to activate aggregation rule. default 0.20
-#define RULE1_WEIGHT ( 2.0 / 10) // Weight of aggregation rule. default 0.6/10
+#define RULE1_WEIGHT ( 1.0 / 10) // Weight of aggregation rule. default 0.6/10
 
 #define RULE2_THRESHOLD 0.07		 // Threshold to activate dispersion rule. default 0.15
 #define RULE2_WEIGHT (1.0 / 10) // Weight of dispersion rule. default 0.02/10
 
 #define RULE3_WEIGHT (1.0 / 10) // Weight of consistency rule. default 1.0/10
 
-#define MIGRATION_WEIGHT (0.6 / 10) // Wheight of attraction towards the common goal. default 0.01/10; weigth 0.4 works when only migration
+#define MIGRATION_WEIGHT (1.0 / 10) // Wheight of attraction towards the common goal. default 0.01/10; weigth 0.4 works when only migration
 
 #define MIGRATORY_URGE 1 // Tells the robots if they should just go forward or move towards a specific migratory direction
 
 #define ABS(x) ((x >= 0) ? (x) : -(x))
 
-#define OBS_RANGE 70
+#define OBS_RANGE 250
 
-#define OBS_GAIN 200
+#define OBS_GAIN 100
 #define NUM_SENS_POTENTIAL 6
 
 #define eps 0.05
@@ -86,7 +86,7 @@ float my_position[3];						   // X, Z, Theta of the current robot
 float prev_my_position[3];					   // X, Z, Theta of the current robot in the previous time step
 float speed[N_GROUPS][FLOCK_SIZE][2];		   // Speeds calculated with Reynold's rules
 float relative_speed[N_GROUPS][FLOCK_SIZE][2]; // Speeds calculated with Reynold's rules
-float migr[2] = {0, -1};					   // Migration vector
+float migr[2] = {0, -2};					   // Migration vector
 char *robot_name;
 float theta_robots[N_GROUPS][FLOCK_SIZE];
 int potential_left;
@@ -213,7 +213,10 @@ void potential_field()
 
 	for (i = 0; i < NUM_SENS_POTENTIAL; i++)
 	{
-		distances[i] = e_get_prox(i) > 0 ? e_get_prox(i) : 0;
+		distances[i] = e_get_prox(front_sensors[i]) > 0 ? e_get_prox(front_sensors[i]) : 0;
+		if (front_sensors[i]==5 || front_sensors[i]==2) {
+			distances[i] /= 5;
+		}
 		sum_sensors += distances[i];								  // Add up sensor values
 		max_sens = max_sens > distances[i] ? max_sens : distances[i]; // Check if new highest sensor value
 	}
@@ -238,14 +241,18 @@ void potential_field()
 		normal_vector[1] = (-mean_vector[0]);
 	}
 
-
+	//sprintf(buffer, "max sens %d \r\n", max_sens);
+	//e_send_uart1_char(buffer, strlen(buffer));
+	sprintf(buffer, "potential %f %f\r\n",	normal_vector[0],	normal_vector[1]);
+	e_send_uart1_char(buffer, strlen(buffer));
 	if (max_sens > OBS_RANGE)
 	{
 	  w_difference = 2 * (max_sens - OBS_RANGE) * sqrt(pow(normal_vector[0], 2) + pow(normal_vector[1] + 1, 2)) * (ABS(normal_vector[0]) / normal_vector[0]);
-		//sprintf(buffer, "diiff %f \r\n", w_difference);
-		//e_send_uart1_char(buffer, strlen(buffer));
-		potential_right = OBS_GAIN * (log10(max_sens - OBS_RANGE)) - w_difference / 2;
-		potential_left = OBS_GAIN * (log10(max_sens - OBS_RANGE)) + w_difference / 2;
+
+		potential_right = (int)(OBS_GAIN * (log10(max_sens - OBS_RANGE)) - w_difference / 2);
+		potential_left = (int)(OBS_GAIN * (log10(max_sens - OBS_RANGE)) + w_difference / 2);
+		limit_potential_field_speed(&potential_right);
+		limit_potential_field_speed(&potential_left);
 	}
 	else
 	{
@@ -253,14 +260,10 @@ void potential_field()
 		potential_left = 0;
 	}
 }
-float limit_difference(float d){
-	const float DIFF=200.0;
-	float difference;
-	if(d > DIFF){ difference=DIFF;}
-	else {
-		if (d < -DIFF) {difference=-DIFF;}
-	  else { difference=d;}}
-	return difference;
+void limit_potential_field_speed(int* potential_field_speed){
+	const int SATURATION=400;
+	if (*potential_field_speed>SATURATION) {*potential_field_speed=SATURATION;}
+	if (*potential_field_speed<-SATURATION) {*potential_field_speed=-SATURATION;}
 }
 
 
@@ -356,8 +359,8 @@ void reynolds_rules()
 	{
 		float normalize=sqrt(pow((migr[0] - my_position[0]),2)+pow((migr[1] - my_position[1]),2));
 		if (normalize > eps) {
-		speed[group_id][robot_id][0] += MIGRATION_WEIGHT*(migr[0] - my_position[0]);///normalize;
-		speed[group_id][robot_id][1] -= MIGRATION_WEIGHT*(migr[1] - my_position[1]);///normalize; //y axis of webots is inverted
+		speed[group_id][robot_id][0] += 4*MIGRATION_WEIGHT*(migr[0] - my_position[0]);///normalize;
+		speed[group_id][robot_id][1] -= 0.25*MIGRATION_WEIGHT*(migr[1] - my_position[1]);///normalize; //y axis of webots is inverted
 	 }else {
 		 speed[group_id][robot_id][0] = 0.0;
 		 speed[group_id][robot_id][1] = 0.0;
@@ -370,8 +373,8 @@ void reynolds_rules()
  }
  prev_rel_avg_y=rel_avg_loc[group_id][1];
 
-	sprintf(buffer, "rel avg x is %f  rel avg y is %f\r\n",rel_avg_loc[group_id][0], rel_avg_loc[group_id][1]);
-	e_send_uart1_char(buffer, strlen(buffer));
+	//sprintf(buffer, "rel avg x is %f  rel avg y is %f\r\n",rel_avg_loc[group_id][0], rel_avg_loc[group_id][1]);
+	//e_send_uart1_char(buffer, strlen(buffer));
 }
 
 
@@ -505,7 +508,10 @@ int main()
 		//different approach, two states, reynolds and potential field
 		for (i = 0; i < NUM_SENS_POTENTIAL; i++)
 		{
-			distances[i] = e_get_prox(front_sensors[i]);								  // Add up sensor values
+			distances[i] = e_get_prox(front_sensors[i]);
+			if (front_sensors[i]==5 || front_sensors[i]==2) {
+				distances[i] /= 5;
+			}							  // Add up sensor values
 			max_sens = max_sens > distances[i] ? max_sens : distances[i]; // Check if new highest sensor value
 		}
 		potential_field();
@@ -514,6 +520,8 @@ int main()
 		compute_wheel_speeds(&msl, &msr);
 
 		// Compute wheels speed from reynold's speed
+	//	sprintf(buffer, "max sens: %d\r\n",max_sens);
+	//	e_send_uart1_char(buffer, strlen(buffer));
 
 		// Adapt speed instinct to distance sensor values
    fast_rotation=0;
@@ -522,6 +530,8 @@ int main()
 			fast_rotation=1;
 			msl = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_left + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msl;
 			msr = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_right + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msr;
+	//		sprintf(buffer, "speeds: %d %d\r\n", msl,msr);
+	//		e_send_uart1_char(buffer, strlen(buffer));
 		}
     //limit wheels
 		limit(&msl, 999);
@@ -545,10 +555,11 @@ int main()
 		// Set speed
 		msl_w = msl * MAX_SPEED_WEB / 1000;
 		msr_w = msr * MAX_SPEED_WEB / 1000;
+
 		e_set_speed_left(msl);
 	  e_set_speed_right(msr);
 		//e_set_speed_left((int)(200));
-		//e_set_speed_right((int)(200));
+	//	e_set_speed_right((int)(200));
 
 		//sprintf(buffer, "Time: %d\r\n", epoch);
 	//	e_send_uart1_char(buffer, strlen(buffer));
