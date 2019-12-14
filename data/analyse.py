@@ -2,10 +2,11 @@ import os
 import numpy as np 
 import matplotlib.pyplot as plt
 
-FILENAME = 'webots_pso.csv'
+# FILENAME = os.path.join(os.getenv("HOME"), 'webots_pso.csv')
+FILENAME = 'data/obstacles_swarm6_fixedrad_v2_lw2_nw2_n1.csv'
 AGGREGATION_BIN = 20
 
-results = np.genfromtxt(os.path.join(os.getenv("HOME"), FILENAME), delimiter=',')
+results = np.genfromtxt(FILENAME, delimiter=',')
 aggregated_results = []
 
 best_result_index = np.argmax(results[:, 6])
