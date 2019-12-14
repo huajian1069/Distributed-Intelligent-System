@@ -74,7 +74,8 @@ double* pso(int n_swarmsize, int n_nb, double lweight, double nbweight, double v
   sprintf(label, "Iteration: 0");
   wb_supervisor_set_label(0,label,0.01,0.01,0.1,0xffffff,0,FONT);
   // Seed the random generator
-  srand(time(NULL));
+  // srand(time(NULL));
+  srand(0);
 
   // Setup neighborhood
   for (i = 0; i < swarmsize; i++) {

@@ -542,7 +542,6 @@ DEF epuck_0_0 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_0_1 E-puck {
   translation -2.900000000000025 -3.1987201280992555e-05 0.09999999998805566
@@ -569,7 +568,6 @@ DEF epuck_0_1 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_0_2 E-puck {
   translation -2.900000000000024 0.005 -0.10000000001194448
@@ -596,7 +594,6 @@ DEF epuck_0_2 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_0_3 E-puck {
   translation -2.900000000000024 0.005 0.2138919999880553
@@ -623,7 +620,6 @@ DEF epuck_0_3 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_0_4 E-puck {
   translation -2.900000000000025 0.005 -0.20000000001194462
@@ -650,7 +646,6 @@ DEF epuck_0_4 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF SUPERVISOR Robot {
   translation 0.1 0 0.1

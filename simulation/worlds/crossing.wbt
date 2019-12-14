@@ -334,7 +334,6 @@ DEF epuck_0_0 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_0_1 E-puck {
   translation -0.100654 0.005 0.00596927
@@ -361,7 +360,6 @@ DEF epuck_0_1 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_0_2 E-puck {
   translation -0.09999999997420164 0.005 0.10000000001196506
@@ -388,7 +386,6 @@ DEF epuck_0_2 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_0_3 E-puck {
   translation -0.09999999998396611 0.005 -0.20000000012963462
@@ -415,7 +412,6 @@ DEF epuck_0_3 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_0_4 E-puck {
   translation -0.0999999999742016 0.005 0.2000000000119652
@@ -442,7 +438,6 @@ DEF epuck_0_4 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_1_0 E-puck {
   translation -1.9000000000000252 0.005 -1.194452262015801e-11
@@ -469,7 +464,6 @@ DEF epuck_1_0 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_1_1 E-puck {
   translation -1.8999999999742017 0.005 -0.10000000001196521
@@ -496,7 +490,6 @@ DEF epuck_1_1 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_1_2 E-puck {
   translation -1.9000000000000254 0.005 0.09999999998805562
@@ -523,7 +516,6 @@ DEF epuck_1_2 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_1_3 E-puck {
   translation -1.9000000000000246 0.005 -0.20000000001194432
@@ -550,7 +542,6 @@ DEF epuck_1_3 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }
 DEF epuck_1_4 E-puck {
   translation -1.900000000000025 0.005 0.19999999998805543
@@ -577,5 +568,4 @@ DEF epuck_1_4 E-puck {
       channel 50
     }
   ]
-  kinematic TRUE
 }

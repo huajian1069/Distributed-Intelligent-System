@@ -47,12 +47,11 @@ void metrics_init(WbNodeRef *p_robots)
         initial_avg_location[0] += loc[i][0] / FLOCK_SIZE;
         initial_avg_location[1] += loc[i][1] / FLOCK_SIZE;
         initial_avg_location[2] += loc[i][2] / FLOCK_SIZE;
-
-        printf("Migration urge: %f %f\n", absolute_migration[0], absolute_migration[1]);
     }
 
     absolute_migration[0] = initial_avg_location[0] + 4;
     absolute_migration[1] = initial_avg_location[1];
+    printf("Migration urge: %f %f\n", absolute_migration[0], absolute_migration[1]);
 
     sprintf(log_filename, "%s/webots_pso_%lu.csv", getenv("HOME"), (unsigned long)time(NULL));
 }

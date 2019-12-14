@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 #include "config.h"
 #include "pso.h"
 #include "metrics.h"
@@ -8,6 +9,7 @@
 #include <webots/supervisor.h>
 #include <webots/robot.h>
 
+static char filename[100];
 static WbNodeRef robs[MAX_ROB];
 WbDeviceTag emitter[MAX_ROB];
 WbDeviceTag rec[MAX_ROB];
@@ -26,7 +28,6 @@ void reset(void)
 {
   int i;
 
-  
   for (i = 0; i < ROBOTS; i++)
   {
     char robot_name[15];
@@ -51,7 +52,7 @@ void reset(void)
   }
 
   metrics_init(robs);
-  
+  sprintf(filename, "%s/webots_pso.csv", getenv("HOME"));
 }
 
 /* MAIN - Distribute and test conctrollers */
@@ -150,22 +151,73 @@ void initialise_position(int rob_id)
   wb_supervisor_node_restart_controller(robs[rob_id]);
 }
 
+double find_fitness(double weights[ROBOTS][DATASIZE])
+{
+  char line[1000];
+  double temp_weights[ROBOTS][DATASIZE];
+  double temp_fit[ROBOTS];
+  bool found;
+  FILE *fp = fopen(filename, "r");
+
+  while (fgets(line, sizeof(line), fp))
+  {
+    sscanf(line, "%lf,%lf,%lf,%lf,%lf,%lf,%lf",
+           &temp_weights[0][0],
+           &temp_weights[0][1],
+           &temp_weights[0][2],
+           &temp_weights[0][3],
+           &temp_weights[0][4],
+           &temp_weights[0][5],
+           &temp_fit[0]);
+
+    found = true;
+    for (int i = 0; i < DATASIZE; i++) {
+      if (fabs(temp_weights[0][i] - weights[0][i]) > 0.0001) {
+        found = false;
+      }
+    }
+
+    if (found) {
+      fclose(fp);
+      return temp_fit[0];
+    }
+  }
+  fclose(fp);
+
+  return -2;
+}
+
+void save_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS]) {
+  FILE *fp;
+  fp = fopen(filename, "a");
+
+  for (int i = 0; i < DATASIZE; i++)
+  {
+      fprintf(fp, "%lf,", weights[0][i]);
+  }
+  fprintf(fp, "%lf\r\n", fit[0]);
+  fclose(fp);
+}
+
 // Distribute fitness functions among robots
 void calc_fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int its, int numRobs)
 {
   double buffer[255];
   double *rbuffer;
   int i, j;
+  double saved_fitness;
+  
+  // Try to find fitness in a file
+  saved_fitness = find_fitness(weights);
+  if (saved_fitness != -2) {
+    fit[0] = saved_fitness;
+    return;
+  }
 
-  // Initialise robots for fitness
-    wb_supervisor_simulation_reset_physics();
+  printf("test\n");
 
   for (i = 0; i < ROBOTS; i++)
   {
-    initialise_position(i);
-  }
-
-for (i = 0; i < ROBOTS; i++) {
     buffer[0] = DATASIZE;
     for (j = 0; j < DATASIZE; j++)
     {
@@ -194,7 +246,9 @@ for (i = 0; i < ROBOTS; i++) {
     wb_receiver_next_packet(rec[i]);
   }
 
-  metrics_save(buffer + 1, DATASIZE, metrics_get_performance());
+  // metrics_save(buffer + 1, DATASIZE, metrics_get_performance());
+  save_fitness(weights, fit);
+  wb_supervisor_simulation_reset();
 }
 
 /* Optimization fitness function , used in pso.c */
@@ -209,7 +263,7 @@ for (i = 0; i < ROBOTS; i++) {
 /************************************************************************************/
 void fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int neighbors[SWARMSIZE][SWARMSIZE])
 {
-  calc_fitness(weights, fit, FIT_ITS, ROBOTS);
+  calc_fitness(weights, fit, FIT_ITS, 1);
 
 #if NEIGHBORHOOD == RAND_NB
   nRandom(neighbors, 2 * NB);
@@ -225,8 +279,8 @@ void fitness(double weights[ROBOTS][DATASIZE], double fit[ROBOTS], int neighbors
 /* Get distance between robots */
 double robdist(int i, int j)
 {
-  const double* trans_i;
-  const double* trans_j;
+  const double *trans_i;
+  const double *trans_j;
   trans_i = wb_supervisor_field_get_sf_vec3f(wb_supervisor_node_get_field(robs[i], "translation"));
   trans_j = wb_supervisor_field_get_sf_vec3f(wb_supervisor_node_get_field(robs[j], "translation"));
 
