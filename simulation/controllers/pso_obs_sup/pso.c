@@ -37,7 +37,8 @@ int robots;
 int nb;
 char label[30];
 
-const float initial_weights[DATASIZE] = { 0.15, 0.2, 0.3, 0.002, 0.1, 0.03 }; 
+const float initial_weights[DATASIZE] = { 0.25, 0.2, 0.25, 0.002, 0.1, 0.03 }; 
+//const float initial_weights[DATASIZE] = { 0.15, 0.2, 0.3, 0.002, 0.1, 0.03 }; 
 
 /* Particle swarm optimization function                                      */
 /*                                                                           */
