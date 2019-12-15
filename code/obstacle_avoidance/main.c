@@ -47,15 +47,15 @@
 #define WHEEL_RADIUS 0.0205		// Wheel radius (meters)
 #define DELTA_T 0.064			// Timestep (seconds)
 
-#define RULE1_THRESHOLD 0.1	// Threshold to activate aggregation rule. default 0.20
-#define RULE1_WEIGHT ( 1.0 / 10) // Weight of aggregation rule. default 0.6/10
+#define RULE1_THRESHOLD 0.09	// Threshold to activate aggregation rule. default 0.20
+#define RULE1_WEIGHT ( 1.2 / 10) // Weight of aggregation rule. default 0.6/10
 
-#define RULE2_THRESHOLD 0.07		 // Threshold to activate dispersion rule. default 0.15
-#define RULE2_WEIGHT (1.0 / 10) // Weight of dispersion rule. default 0.02/10
+#define RULE2_THRESHOLD 0.09		 // Threshold to activate dispersion rule. default 0.15
+#define RULE2_WEIGHT (0.000002 / 10) // Weight of dispersion rule. default 0.02/10
 
 #define RULE3_WEIGHT (1.0 / 10) // Weight of consistency rule. default 1.0/10
 
-#define MIGRATION_WEIGHT (1.0 / 10) // Wheight of attraction towards the common goal. default 0.01/10; weigth 0.4 works when only migration
+#define MIGRATION_WEIGHT (0.4 / 10) // Wheight of attraction towards the common goal. default 0.01/10; weigth 0.4 works when only migration
 
 #define MIGRATORY_URGE 1 // Tells the robots if they should just go forward or move towards a specific migratory direction
 
@@ -177,6 +177,7 @@ void update_self_motion(int msl, int msr)
  */
 void compute_wheel_speeds(int *msl, int *msr)
 {
+
 	// Compute wanted position from Reynold's speed and current location
 	float x = speed[group_id][robot_id][0] * cosf(my_position[2]) + speed[group_id][robot_id][1] * sinf(my_position[2]);  // x in robot coordinates
 	float z = -speed[group_id][robot_id][0] * sinf(my_position[2]) + speed[group_id][robot_id][1] * cosf(my_position[2]); // z in robot coordinates
@@ -198,7 +199,11 @@ void compute_wheel_speeds(int *msl, int *msr)
 	limit(msl, MAX_SPEED);
 	limit(msr, MAX_SPEED);
 }
-
+void limit_potential_field_speed(int* potential_field_speed){
+	const int SATURATION=400;
+	if (*potential_field_speed>SATURATION) {*potential_field_speed=SATURATION;}
+	if (*potential_field_speed<-SATURATION) {*potential_field_speed=-SATURATION;}
+}
 // update speeds according to the potential fiel
 void potential_field()
 {
@@ -243,8 +248,8 @@ void potential_field()
 
 	//sprintf(buffer, "max sens %d \r\n", max_sens);
 	//e_send_uart1_char(buffer, strlen(buffer));
-	sprintf(buffer, "potential %f %f\r\n",	normal_vector[0],	normal_vector[1]);
-	e_send_uart1_char(buffer, strlen(buffer));
+//	sprintf(buffer, "potential %f %f\r\n",	normal_vector[0],	normal_vector[1]);
+//	e_send_uart1_char(buffer, strlen(buffer));
 	if (max_sens > OBS_RANGE)
 	{
 	  w_difference = 2 * (max_sens - OBS_RANGE) * sqrt(pow(normal_vector[0], 2) + pow(normal_vector[1] + 1, 2)) * (ABS(normal_vector[0]) / normal_vector[0]);
@@ -260,11 +265,7 @@ void potential_field()
 		potential_left = 0;
 	}
 }
-void limit_potential_field_speed(int* potential_field_speed){
-	const int SATURATION=400;
-	if (*potential_field_speed>SATURATION) {*potential_field_speed=SATURATION;}
-	if (*potential_field_speed<-SATURATION) {*potential_field_speed=-SATURATION;}
-}
+
 
 
 /*
@@ -274,7 +275,6 @@ void limit_potential_field_speed(int* potential_field_speed){
 void reynolds_rules()
 {
 	int i, j, g;					  // Loop counters
-	float abs_avg_loc[N_GROUPS][2];
 	float cohesion[2] = {0, 0};
 	float dispersion[2] = {0, 0};
 	float consistency[2] = {0, 0};
@@ -309,7 +309,8 @@ void reynolds_rules()
 			rel_avg_loc[g][j] /= FLOCK_SIZE - 1;
 		}
 	}
-
+	sprintf(buffer, "rel avg %f %f\r\n",	rel_avg_loc[g][0], rel_avg_loc[g][1]);
+	e_send_uart1_char(buffer, strlen(buffer));
 	/* Rule 1 - Aggregation/Cohesion: move towards the center of mass */
 	if (sqrt(pow(rel_avg_loc[group_id][0], 2) + pow(rel_avg_loc[group_id][1], 2)) >
 			RULE1_THRESHOLD) {
@@ -347,8 +348,9 @@ void reynolds_rules()
 		//speed[group_id][robot_id][j] += dispersion[j] * RULE2_WEIGHT;
 		//speed[group_id][robot_id][j] += consistency[j] * RULE3_WEIGHT;
 	}
-	//speed[group_id][robot_id][1] *= -1; //y axis of webots is inverted
-
+	speed[group_id][robot_id][1] *= -1; //y axis of webots is inverted
+	sprintf(buffer, "disp %f %f\r\n",	dispersion[0], dispersion[1]);
+	e_send_uart1_char(buffer, strlen(buffer));
 	//move the robot according to some migration rule
 	if (MIGRATORY_URGE == 0)
 	{
@@ -400,9 +402,7 @@ void process_received_ping_messages(void)
 	double message_rssi; // Received Signal Strength indicator
 	double theta;
 	double range;
-	char *inbuffer; // Buffer for the receiver node
 	int other_robot_id, other_group_id;
-	float other_x, other_y;
 
 	IrcomMessage imsg;
 	ircomPopMessage(&imsg);
