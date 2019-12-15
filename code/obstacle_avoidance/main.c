@@ -47,15 +47,15 @@
 #define WHEEL_RADIUS 0.0205		// Wheel radius (meters)
 #define DELTA_T 0.064			// Timestep (seconds)
 
-#define RULE1_THRESHOLD 0.09	// Threshold to activate aggregation rule. default 0.20
-#define RULE1_WEIGHT ( 1.2 / 10) // Weight of aggregation rule. default 0.6/10
+#define RULE1_THRESHOLD 0.13	// Threshold to activate aggregation rule. default 0.20
+#define RULE1_WEIGHT ( 0.6 / 10) // Weight of aggregation rule. default 0.6/10
 
-#define RULE2_THRESHOLD 0.09		 // Threshold to activate dispersion rule. default 0.15
-#define RULE2_WEIGHT (0.000002 / 10) // Weight of dispersion rule. default 0.02/10
+#define RULE2_THRESHOLD 0.1		 // Threshold to activate dispersion rule. default 0.15
+#define RULE2_WEIGHT (1.5 / 10) // Weight of dispersion rule. default 0.02/10
 
 #define RULE3_WEIGHT (1.0 / 10) // Weight of consistency rule. default 1.0/10
 
-#define MIGRATION_WEIGHT (0.4 / 10) // Wheight of attraction towards the common goal. default 0.01/10; weigth 0.4 works when only migration
+#define MIGRATION_WEIGHT (0.08 / 10) // Wheight of attraction towards the common goal. default 0.01/10; weigth 0.4 works when only migration
 
 #define MIGRATORY_URGE 1 // Tells the robots if they should just go forward or move towards a specific migratory direction
 
@@ -330,7 +330,9 @@ void reynolds_rules()
 		{
 			for (j = 0; j < 2; j++)
 			{
-				dispersion[j] -= 1 / relative_pos[group_id][i][j]; // Relative distance to k
+				//if(relative_pos[group_id][i][j]==0) relative_pos[group_id][i][j]=0.001;
+				//dispersion[j] -= 1 / relative_pos[group_id][i][j]; // Relative distance to k
+				dispersion[j]-= relative_pos[group_id][i][j];
 			}
 		}
 	}
@@ -345,10 +347,12 @@ void reynolds_rules()
 	for (j = 0; j < 2; j++)
 	{
 		speed[group_id][robot_id][j] = cohesion[j] * RULE1_WEIGHT;
-		//speed[group_id][robot_id][j] += dispersion[j] * RULE2_WEIGHT;
+		speed[group_id][robot_id][j] += dispersion[j] * RULE2_WEIGHT;
 		//speed[group_id][robot_id][j] += consistency[j] * RULE3_WEIGHT;
 	}
 	speed[group_id][robot_id][1] *= -1; //y axis of webots is inverted
+	sprintf(buffer, "disp %f %f\r\n",	cohesion[0], cohesion[1]);
+	e_send_uart1_char(buffer, strlen(buffer));
 	sprintf(buffer, "disp %f %f\r\n",	dispersion[0], dispersion[1]);
 	e_send_uart1_char(buffer, strlen(buffer));
 	//move the robot according to some migration rule
@@ -361,8 +365,8 @@ void reynolds_rules()
 	{
 		float normalize=sqrt(pow((migr[0] - my_position[0]),2)+pow((migr[1] - my_position[1]),2));
 		if (normalize > eps) {
-		speed[group_id][robot_id][0] += 4*MIGRATION_WEIGHT*(migr[0] - my_position[0]);///normalize;
-		speed[group_id][robot_id][1] -= 0.25*MIGRATION_WEIGHT*(migr[1] - my_position[1]);///normalize; //y axis of webots is inverted
+		speed[group_id][robot_id][0] += MIGRATION_WEIGHT*(migr[0] - my_position[0]);///normalize;
+		speed[group_id][robot_id][1] -= MIGRATION_WEIGHT*(migr[1] - my_position[1]);///normalize; //y axis of webots is inverted
 	 }else {
 		 speed[group_id][robot_id][0] = 0.0;
 		 speed[group_id][robot_id][1] = 0.0;
@@ -527,7 +531,7 @@ int main()
    fast_rotation=0;
 	 if (max_sens > OBS_RANGE)
 		{
-			fast_rotation=1;
+			fast_rotation=0;
 			msl = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_left + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msl;
 			msr = (((float)(log10(max_sens - OBS_RANGE))) / log10(max_sens)) * potential_right + (1 - ((float)(log10(max_sens - OBS_RANGE)) / log10(max_sens))) * msr;
 	//		sprintf(buffer, "speeds: %d %d\r\n", msl,msr);
@@ -540,18 +544,19 @@ int main()
 		//checking he is not too away
 		//sprintf(buffer, "counter: %d\r\n", counter);
 	  //e_send_uart1_char(buffer, strlen(buffer));
-    if (counter>10){
-			if(rel_avg_loc[group_id][1]>0.05){
-				msl=0.0;
-				msr=0.0;
-				wait_ms(2000);
-				counter=0;
-			}
-		}
+    //if (counter>10){
+			//if(rel_avg_loc[group_id][1]>0.05){
+			//	msl=0.0;
+			//	msr=0.0;
+			//	wait_ms(2000);
+			//	counter=0;
+			//}
+		//}
 
 
 
-
+		sprintf(buffer, "speed %d %d\r\n",	msl, msr);
+  	e_send_uart1_char(buffer, strlen(buffer));
 		// Set speed
 		msl_w = msl * MAX_SPEED_WEB / 1000;
 		msr_w = msr * MAX_SPEED_WEB / 1000;
