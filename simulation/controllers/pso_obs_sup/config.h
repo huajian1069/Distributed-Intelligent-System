@@ -28,7 +28,7 @@
 #define FIXEDRAD_NB 2
 
 /* Fitness definitions */
-#define FIT_ITS 900 // Number of fitness steps to run during optimization
+#define FIT_ITS 700 // Number of fitness steps to run during optimization
 
 #define FINALRUNS 10
 #define NEIGHBORHOOD FIXEDRAD_NB

@@ -2,5 +2,4 @@
 .DS_Store
 */.DS_Store
 simulation/controllers/flock_controller/Makefile
-simulation/worlds/*
 simulation/worlds/.*

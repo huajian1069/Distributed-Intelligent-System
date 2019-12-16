@@ -72,7 +72,7 @@ float prev_my_position[3];					   // X, Z, Theta of the current robot in the pre
 float speed[N_GROUPS][FLOCK_SIZE][2];		   // Speeds calculated with Reynold's rules
 float relative_speed[N_GROUPS][FLOCK_SIZE][2]; // Speeds calculated with Reynold's rules
 int initialized[N_GROUPS][FLOCK_SIZE];		   // != 0 if initial positions have been received
-float migr[2] = {0, -2.2};					   // Migration vector
+float migr[2] = {0, -2};					   // Migration vector
 char *robot_name;
 float theta_robots[N_GROUPS][FLOCK_SIZE];
 int last_timestamp[N_GROUPS][FLOCK_SIZE];
@@ -444,8 +444,8 @@ int main()
 		// Adapt speed instinct to distance sensor values
 		if (sum_sensors > NB_SENSORS * MIN_SENS)
 		{
-			msl -= msl * max_sens / (2 * MAX_SENS);
-			msr -= msr * max_sens / (2 * MAX_SENS);
+			msl -= BRAITENBERG_WEIGHT * msl * max_sens / (2 * MAX_SENS);
+			msr -= BRAITENBERG_WEIGHT * msr * max_sens / (2 * MAX_SENS);
 		}
 
 		// Add Braitenberg
@@ -464,16 +464,6 @@ int main()
 
 
 		optim_state_t optim_state = optim_update(ds, NB_SENSORS, msl_w, msr_w);
-		if (optim_state == OPTIM_CHANGE_CONFIG) {
-			// printf("Change config %d %d...\n", optim_config.n_params, optim_config.n_iters);
-			for (int k = 0; k < 8; k++) {
-				//e_puck_matrix[0] = optim_config.params[k];
-				//e_puck_matrix[15-k] = optim_config.params[k];
-			}
-		}
-		if (optim_state == OPTIM_SEND_STATS) {
-			// printf("Sending stats: %f %f...\n", optim_stats.sum_prox, optim_stats.max_prox);
-		}
 
 		// Continue one step
 		wb_robot_step(TIME_STEP);

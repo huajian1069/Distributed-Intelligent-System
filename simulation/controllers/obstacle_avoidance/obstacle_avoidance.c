@@ -79,7 +79,7 @@ float prev_my_position[3];						  // X, Z, Theta of the current robot in the pre
 float speed[N_GROUPS][FLOCK_SIZE][2];			  // Speeds calculated with Reynold's rules
 float relative_speed[N_GROUPS][FLOCK_SIZE][2];	// Speeds calculated with Reynold's rules
 int initialized[N_GROUPS][FLOCK_SIZE];			  // != 0 if initial positions have been received
-float migr[2] = {0, -3};						  // Migration vector
+float migr[2] = {0, -5};						  // Migration vector
 char *robot_name;
 float theta_robots[N_GROUPS][FLOCK_SIZE];
 int potential_left;
@@ -455,7 +455,7 @@ int main()
 		limit(&msr, 999);
 
 		// Give priority to group 1
-		if (group_id == 0) {
+		if (group_id == 1) {
 			for (i = 0; i < FLOCK_SIZE; i++)
 			{
 				if (sqrt(pow(relative_pos[!group_id][i][0], 2) + 

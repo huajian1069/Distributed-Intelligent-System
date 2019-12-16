@@ -6,17 +6,10 @@ WorldInfo {
     "Date: DD MMM YYYY"
   ]
   basicTimeStep 16
-  contactProperties [
-    ContactProperties {
-      coulombFriction [
-        0.1
-      ]
-    }
-  ]
 }
 Viewpoint {
-  orientation -0.8003903931483249 0.5224612872369317 0.29395479566524885 1.1246278115492296
-  position 1.3509149523076283 5.937308642725073 3.168657703810489
+  orientation -0.9931345111565514 -0.11262694456245013 -0.03160718444222321 1.03351
+  position -0.19859856883782406 8.428920266091401 5.51068092893136
 }
 PointLight {
   intensity 0.5
@@ -86,7 +79,6 @@ DEF ground Solid {
 DEF long_rock_3 Solid {
   translation -3 0 0
   rotation 0 1 0 1.5708
-  scale 7 7 7
   children [
     Shape {
       appearance Appearance {
@@ -105,136 +97,6 @@ DEF long_rock_3 Solid {
     }
   ]
   name "short brick"
-  boundingObject DEF U_END_BOX Box {
-    size 0.6 0.2 0.01
-  }
-}
-DEF long_rock_3 Solid {
-  translation 3.0961309999999997 0 0.038613999999999996
-  rotation 0 1 0 1.5708
-  scale 7 7 7
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.6 0.2 0.01
-      }
-    }
-  ]
-  name "short brick(16)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.6 0.2 0.01
-  }
-}
-DEF long_rock_3 Solid {
-  translation -0.988896 0 -2.0013579999999997
-  rotation 0 -1 0 -3.3071795861872033e-06
-  scale 7 7 7
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.6 0.2 0.01
-      }
-    }
-  ]
-  name "short brick(17)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.6 0.2 0.01
-  }
-}
-DEF long_rock_3 Solid {
-  translation 1.1053899999999999 0 -2.005655
-  rotation 0 -1 0 -3.3071795861872033e-06
-  scale 7 7 7
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.6 0.2 0.01
-      }
-    }
-  ]
-  name "short brick(18)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.6 0.2 0.01
-  }
-}
-DEF long_rock_3 Solid {
-  translation -1.075852 0 1.9841289999999998
-  rotation 0 -1 0 -3.3071795861872033e-06
-  scale 7 7 7
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.6 0.2 0.01
-      }
-    }
-  ]
-  name "short brick(19)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.6 0.2 0.01
-  }
-}
-DEF long_rock_3 Solid {
-  translation 1.1226399999999999 0 1.981968
-  rotation 0 -1 0 -3.3071795861872033e-06
-  scale 7 7 7
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.6 0.2 0.01
-      }
-    }
-  ]
-  name "short brick(20)"
   boundingObject DEF U_END_BOX Box {
     size 0.6 0.2 0.01
   }
@@ -288,7 +150,7 @@ DEF long_rock_6 Solid {
   }
 }
 DEF rock Solid {
-  translation -1.61812 0 -0.574333
+  translation -0.267548 0 -0.22167
   rotation 0 1 0 5.02662
   children [
     Shape {
@@ -388,7 +250,7 @@ DEF rock Solid {
   }
 }
 DEF rock Solid {
-  translation -0.865819 4.44089e-16 0.854082
+  translation -1.34035 0 0.776227
   rotation 0 -1 0 2.05704
   children [
     Shape {
@@ -408,106 +270,6 @@ DEF rock Solid {
     }
   ]
   name "short brick"
-  boundingObject DEF U_END_BOX Box {
-    size 0.05 0.2 0.05
-  }
-}
-DEF rock Solid {
-  translation -1.65772 4.44089e-16 0.699916
-  rotation 0 -1 0 2.05704
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.05 0.2 0.05
-      }
-    }
-  ]
-  name "short brick(12)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.05 0.2 0.05
-  }
-}
-DEF rock Solid {
-  translation -1.28015 -4.44089e-16 0.0324852
-  rotation 0 -1 0 2.05704
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.05 0.2 0.05
-      }
-    }
-  ]
-  name "short brick(13)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.05 0.2 0.05
-  }
-}
-DEF rock Solid {
-  translation -0.721857 1.77636e-15 0.26672
-  rotation 0 -1 0 2.05704
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.05 0.2 0.05
-      }
-    }
-  ]
-  name "short brick(14)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.05 0.2 0.05
-  }
-}
-DEF rock Solid {
-  translation -1.34798 -4.44089e-16 0.77297
-  rotation 0 -1 0 2.05704
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.05 0.2 0.05
-      }
-    }
-  ]
-  name "short brick(15)"
   boundingObject DEF U_END_BOX Box {
     size 0.05 0.2 0.05
   }
@@ -563,7 +325,7 @@ DEF rock Solid {
   }
 }
 DEF rock Solid {
-  translation -1.70003 -6.66134e-15 0.341705
+  translation -0.105938 -1.77636e-15 -1.3463
   children [
     Shape {
       appearance Appearance {
@@ -582,102 +344,6 @@ DEF rock Solid {
     }
   ]
   name "short brick"
-  boundingObject DEF U_END_BOX Box {
-    size 0.15 0.2 0.15
-  }
-}
-DEF rock Solid {
-  translation -0.352912 2.66453e-15 -0.565783
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.15 0.2 0.15
-      }
-    }
-  ]
-  name "short brick(8)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.15 0.2 0.15
-  }
-}
-DEF rock Solid {
-  translation 0.00328062 4.44089e-15 0.189705
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.15 0.2 0.15
-      }
-    }
-  ]
-  name "short brick(9)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.15 0.2 0.15
-  }
-}
-DEF rock Solid {
-  translation -1.07337 -5.81757e-14 0.216276
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.15 0.2 0.15
-      }
-    }
-  ]
-  name "short brick(10)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.15 0.2 0.15
-  }
-}
-DEF rock Solid {
-  translation -1.26056 5.32907e-15 0.313931
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.15 0.2 0.15
-      }
-    }
-  ]
-  name "short brick(11)"
   boundingObject DEF U_END_BOX Box {
     size 0.15 0.2 0.15
   }
@@ -708,7 +374,7 @@ DEF rock Solid {
   }
 }
 DEF rock Solid {
-  translation -1.02519 0 0.604005
+  translation -0.0855468 0 0.846635
   children [
     Shape {
       appearance Appearance {
@@ -727,30 +393,6 @@ DEF rock Solid {
     }
   ]
   name "short brick"
-  boundingObject DEF U_END_BOX Box {
-    size 0.15 0.2 0.15
-  }
-}
-DEF rock Solid {
-  translation -0.983312 2.22045e-15 0.0317866
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.15 0.2 0.15
-      }
-    }
-  ]
-  name "short brick(3)"
   boundingObject DEF U_END_BOX Box {
     size 0.15 0.2 0.15
   }
@@ -804,7 +446,7 @@ DEF rock Solid {
   }
 }
 DEF rock Solid {
-  translation -1.53253 -4.4409e-15 1.02405
+  translation -1.05597 -1.77636e-15 1.72366
   children [
     Shape {
       appearance Appearance {
@@ -828,7 +470,7 @@ DEF rock Solid {
   }
 }
 DEF rock Solid {
-  translation -1.7343 -4.39648e-14 -0.170494
+  translation -1.95487 0 -0.686015
   children [
     Shape {
       appearance Appearance {
@@ -846,109 +488,13 @@ DEF rock Solid {
       }
     }
   ]
-  name "short brick(1)"
+  name "short brick"
   boundingObject DEF U_END_BOX Box {
     size 0.15 0.2 0.37
   }
 }
 DEF rock Solid {
-  translation -1.32551 -7.10538e-15 -0.38231
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.15 0.2 0.37
-      }
-    }
-  ]
-  name "short brick(4)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.15 0.2 0.37
-  }
-}
-DEF rock Solid {
-  translation -0.495232 -4.30766e-14 -0.0372385
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.15 0.2 0.37
-      }
-    }
-  ]
-  name "short brick(5)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.15 0.2 0.37
-  }
-}
-DEF rock Solid {
-  translation -0.596963 -4.61852e-14 0.715185
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.15 0.2 0.37
-      }
-    }
-  ]
-  name "short brick(6)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.15 0.2 0.37
-  }
-}
-DEF rock Solid {
-  translation -0.72138 -4.44089e-14 -0.536982
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.15 0.2 0.37
-      }
-    }
-  ]
-  name "short brick(7)"
-  boundingObject DEF U_END_BOX Box {
-    size 0.15 0.2 0.37
-  }
-}
-DEF rock Solid {
-  translation -1.99085 1.33227e-15 0.576196
+  translation -1.20749 0 -0.478731
   rotation 0 -1 0 2.05704
   children [
     Shape {
@@ -968,40 +514,15 @@ DEF rock Solid {
     }
   ]
   name "short brick"
-  boundingObject DEF U_END_BOX Box {
-    size 0.15 0.2 0.15
-  }
-}
-DEF rock Solid {
-  translation -1.97905 8.88178e-16 0.148342
-  rotation 0 -1 0 2.05704
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 1 1
-        }
-        texture ImageTexture {
-          url [
-            "textures/stone-2.png"
-          ]
-        }
-      }
-      geometry Box {
-        size 0.15 0.2 0.15
-      }
-    }
-  ]
-  name "short brick(2)"
   boundingObject DEF U_END_BOX Box {
     size 0.15 0.2 0.15
   }
 }
 DEF epuck_0_0 E-puck {
-  translation -2.9 0.005 -1.19446e-11
+  translation -2.9000000000000243 0.005 -1.1944571543457554e-11
   rotation 0 1 0 -1.5700000009872692
   name "epuck_0_0"
-  controller "obstacle_avoidance"
+  controller "reynolds2"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -1023,10 +544,10 @@ DEF epuck_0_0 E-puck {
   ]
 }
 DEF epuck_0_1 E-puck {
-  translation -2.9 0.005 0.1
+  translation -2.900000000000025 -3.1987201280992555e-05 0.09999999998805566
   rotation 0 1 0 -1.5700000009873452
   name "epuck_0_1"
-  controller "obstacle_avoidance"
+  controller "reynolds2"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -1038,21 +559,21 @@ DEF epuck_0_1 E-puck {
     }
   ]
   groundSensorsSlot [
-    Emitter {
-      name "emitter2"
-      channel 50
-    }
     Receiver {
       name "receiver2"
+      channel 50
+    }
+    Emitter {
+      name "emitter2"
       channel 50
     }
   ]
 }
 DEF epuck_0_2 E-puck {
-  translation -2.9 0.005 -0.1
+  translation -2.900000000000024 0.005 -0.10000000001194448
   rotation 0 1 0 -1.5700000009873216
   name "epuck_0_2"
-  controller "obstacle_avoidance"
+  controller "reynolds2"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -1064,21 +585,21 @@ DEF epuck_0_2 E-puck {
     }
   ]
   groundSensorsSlot [
-    Emitter {
-      name "emitter2"
-      channel 50
-    }
     Receiver {
       name "receiver2"
+      channel 50
+    }
+    Emitter {
+      name "emitter2"
       channel 50
     }
   ]
 }
 DEF epuck_0_3 E-puck {
-  translation -2.9 0.005 0.22
+  translation -2.900000000000024 0.005 0.2138919999880553
   rotation 0 1 0 -1.5700000009872743
   name "epuck_0_3"
-  controller "obstacle_avoidance"
+  controller "reynolds2"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -1090,21 +611,21 @@ DEF epuck_0_3 E-puck {
     }
   ]
   groundSensorsSlot [
-    Emitter {
-      name "emitter2"
-      channel 50
-    }
     Receiver {
       name "receiver2"
+      channel 50
+    }
+    Emitter {
+      name "emitter2"
       channel 50
     }
   ]
 }
 DEF epuck_0_4 E-puck {
-  translation -2.9 0.005 -0.2
+  translation -2.900000000000025 0.005 -0.20000000001194462
   rotation 0 1 0 -1.5700000009872994
   name "epuck_0_4"
-  controller "obstacle_avoidance"
+  controller "reynolds2"
   turretSlot [
     Receiver {
       name "receiver_super"
@@ -1116,12 +637,12 @@ DEF epuck_0_4 E-puck {
     }
   ]
   groundSensorsSlot [
-    Emitter {
-      name "emitter2"
-      channel 50
-    }
     Receiver {
       name "receiver2"
+      channel 50
+    }
+    Emitter {
+      name "emitter2"
       channel 50
     }
   ]
